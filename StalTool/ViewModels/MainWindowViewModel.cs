@@ -1,7 +1,7 @@
-using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -9,69 +9,237 @@ namespace StalTool.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-    // ─── Данные пользователя ──────────────────────────────────────────────────
-    [ObservableProperty] private string _username = "BrykLeeN";
-    [ObservableProperty] private string _userInitial = "B";
-    [ObservableProperty] private string _userTier = "Олигарх";
+    // ─── Пользователь ────────────────────────────────────────────────────────
+    [ObservableProperty] private string _username     = "BrykLeeN";
+    [ObservableProperty] private string _userInitial  = "B";
+    [ObservableProperty] private string _userTier     = "Олигарх";
+    [ObservableProperty] private string _userTierFull = "Олигарх Зоны • до 15.09.2026";
 
-    // ─── Навигация ────────────────────────────────────────────────────────────
-    [ObservableProperty] private string _currentPageTitle = "Аукцион";
+    // ─── Цвета тира ──────────────────────────────────────────────────────────
+    [ObservableProperty] private Color _tierAccentColor    = Color.Parse("#FFB020");
+    [ObservableProperty] private Color _tierAccentColorEnd = Color.Parse("#FF8C00");
+    [ObservableProperty] private Color _tierBgColor        = Color.Parse("#1A1200");
+
+    // ─── Меню пользователя ───────────────────────────────────────────────────
+    [ObservableProperty] private bool   _isUserMenuOpen = false;
+    [ObservableProperty] private string _userMenuArrow  = "▾";
+
+    // ─── Заголовок страницы ───────────────────────────────────────────────────
+    [ObservableProperty] private string _currentPageTitle    = "Аукцион";
     [ObservableProperty] private string _currentPageSubtitle = "— аналитика торгов";
-
-    // Сюда будет подставляться активная страница (ViewModel страницы)
-    // Пока null — позже заменим на реальные страницы
     [ObservableProperty] private ViewModelBase? _currentPage;
 
-    // ─── Команды навигации ────────────────────────────────────────────────────
+    // ─── Активные разделы сайдбара ────────────────────────────────────────────
+    [ObservableProperty] private bool _isAuctionActive  = true;
+    [ObservableProperty] private bool _isArsenActive    = false;
+    [ObservableProperty] private bool _isHistoryActive  = false;
+    [ObservableProperty] private bool _isRadarActive    = false;
+    [ObservableProperty] private bool _isSettingsActive = false;
+
+    // ─── Вкладки внутри раздела ───────────────────────────────────────────────
+    // HasSubTabs — показывает строку вкладок под titlebar
+    [ObservableProperty] private bool   _hasSubTabs  = true;
+    [ObservableProperty] private bool   _hasSubTab3  = true;
+
+    [ObservableProperty] private string _subTab1Title = "График цен";
+    [ObservableProperty] private string _subTab2Title = "История лотов";
+    [ObservableProperty] private string _subTab3Title = "Калькулятор";
+
+    [ObservableProperty] private bool _isSubTab1Active = true;
+    [ObservableProperty] private bool _isSubTab2Active = false;
+    [ObservableProperty] private bool _isSubTab3Active = false;
+
+    public MainWindowViewModel()
+    {
+        ApplyTierColors(UserTier);
+    }
+
+    // ─── Меню пользователя ───────────────────────────────────────────────────
+    [RelayCommand]
+    private void ToggleUserMenu()
+    {
+        IsUserMenuOpen = !IsUserMenuOpen;
+    }
+
+    [RelayCommand]
+    private void Logout()
+    {
+        IsUserMenuOpen = false;
+        // TODO: очистить токен, перейти на LoginPage
+    }
+
+    partial void OnIsUserMenuOpenChanged(bool value)
+    {
+        UserMenuArrow = value ? "▴" : "▾";
+    }
+
+    // ─── Сброс активных состояний ────────────────────────────────────────────
+    private void ResetSidebarActive()
+    {
+        IsAuctionActive  = false;
+        IsArsenActive    = false;
+        IsHistoryActive  = false;
+        IsRadarActive    = false;
+        IsSettingsActive = false;
+        IsUserMenuOpen   = false;
+    }
+
+    private void ResetSubTabs()
+    {
+        IsSubTab1Active = false;
+        IsSubTab2Active = false;
+        IsSubTab3Active = false;
+    }
+
+    // ─── Навигация по разделам ────────────────────────────────────────────────
     [RelayCommand]
     private void NavigateToAuction()
     {
-        CurrentPageTitle = "Аукцион";
+        ResetSidebarActive();
+        IsAuctionActive     = true;
+        CurrentPageTitle    = "Аукцион";
         CurrentPageSubtitle = "— аналитика торгов";
-        // CurrentPage = new AuctionViewModel(); // раскомментируешь когда создашь
+
+        // Аукцион имеет 3 вкладки
+        HasSubTabs  = true;
+        HasSubTab3  = true;
+        SubTab1Title = "График цен";
+        SubTab2Title = "История лотов";
+        SubTab3Title = "Калькулятор";
+
+        ResetSubTabs();
+        IsSubTab1Active = true;
+        // CurrentPage = new AuctionPriceChartViewModel();
     }
 
     [RelayCommand]
     private void NavigateToArsen()
     {
-        CurrentPageTitle = "Арсен";
+        ResetSidebarActive();
+        IsArsenActive       = true;
+        CurrentPageTitle    = "Арсен";
         CurrentPageSubtitle = "— калькулятор крафта";
-        // CurrentPage = new ArsenViewModel();
+
+        // Арсен: 2 вкладки
+        HasSubTabs   = true;
+        HasSubTab3   = false;
+        SubTab1Title = "Калькулятор";
+        SubTab2Title = "История крафта";
+
+        ResetSubTabs();
+        IsSubTab1Active = true;
+        // CurrentPage = new ArsenCalculatorViewModel();
     }
 
     [RelayCommand]
     private void NavigateToHistory()
     {
-        CurrentPageTitle = "История";
+        ResetSidebarActive();
+        IsHistoryActive     = true;
+        CurrentPageTitle    = "История";
         CurrentPageSubtitle = "— торговые записи";
+
+        // История: без вкладок
+        HasSubTabs = false;
+        ResetSubTabs();
         // CurrentPage = new HistoryViewModel();
     }
 
     [RelayCommand]
     private void NavigateToRadar()
     {
-        CurrentPageTitle = "Радар";
+        ResetSidebarActive();
+        IsRadarActive       = true;
+        CurrentPageTitle    = "Радар";
         CurrentPageSubtitle = "— мониторинг цен";
+
+        HasSubTabs   = true;
+        HasSubTab3   = false;
+        SubTab1Title = "Активные цели";
+        SubTab2Title = "Настройки радара";
+
+        ResetSubTabs();
+        IsSubTab1Active = true;
         // CurrentPage = new RadarViewModel();
     }
 
     [RelayCommand]
     private void NavigateToSettings()
     {
-        CurrentPageTitle = "Настройки";
+        ResetSidebarActive();
+        IsSettingsActive    = true;
+        CurrentPageTitle    = "Настройки";
         CurrentPageSubtitle = "";
+
+        HasSubTabs = false;
+        ResetSubTabs();
         // CurrentPage = new SettingsViewModel();
     }
 
-    // ─── Команды управления окном ─────────────────────────────────────────────
+    // ─── Навигация по вкладкам ────────────────────────────────────────────────
+    [RelayCommand]
+    private void NavigateToSubTab1()
+    {
+        ResetSubTabs();
+        IsSubTab1Active = true;
+    }
+
+    [RelayCommand]
+    private void NavigateToSubTab2()
+    {
+        ResetSubTabs();
+        IsSubTab2Active = true;
+    }
+
+    [RelayCommand]
+    private void NavigateToSubTab3()
+    {
+        ResetSubTabs();
+        IsSubTab3Active = true;
+    }
+
+    // ─── Цвета тира ──────────────────────────────────────────────────────────
+    private void ApplyTierColors(string tier)
+    {
+        if (tier.Contains("Олигарх") || tier.Contains("VIP") || tier.Contains("Навсегда"))
+        {
+            TierAccentColor    = Color.Parse("#FFB020");
+            TierAccentColorEnd = Color.Parse("#FF8C00");
+            TierBgColor        = Color.Parse("#1A1200");
+        }
+        else if (tier.Contains("Спонсор"))
+        {
+            TierAccentColor    = Color.Parse("#FF5566");
+            TierAccentColorEnd = Color.Parse("#CC3344");
+            TierBgColor        = Color.Parse("#1A0008");
+        }
+        else if (tier.Contains("Supporter") || tier.Contains("Саппортер"))
+        {
+            TierAccentColor    = Color.Parse("#44FF88");
+            TierAccentColorEnd = Color.Parse("#22CC66");
+            TierBgColor        = Color.Parse("#001A0A");
+        }
+        else if (tier.Contains("Tester") || tier.Contains("Тестер"))
+        {
+            TierAccentColor    = Color.Parse("#00E5FF");
+            TierAccentColorEnd = Color.Parse("#00AACC");
+            TierBgColor        = Color.Parse("#001A1A");
+        }
+        else
+        {
+            TierAccentColor    = Color.Parse("#9B59FF");
+            TierAccentColorEnd = Color.Parse("#7B39DF");
+            TierBgColor        = Color.Parse("#0D001A");
+        }
+    }
+
+    // ─── Управление окном ────────────────────────────────────────────────────
     [RelayCommand]
     private void Minimize()
     {
         if (Application.Current?.ApplicationLifetime
             is IClassicDesktopStyleApplicationLifetime lifetime)
-        {
             lifetime.MainWindow!.WindowState = WindowState.Minimized;
-        }
     }
 
     [RelayCommand]
@@ -79,8 +247,6 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (Application.Current?.ApplicationLifetime
             is IClassicDesktopStyleApplicationLifetime lifetime)
-        {
             lifetime.MainWindow!.Close();
-        }
     }
 }

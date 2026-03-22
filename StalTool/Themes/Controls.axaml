@@ -80,31 +80,71 @@
     </ControlTheme>
 
     <!-- =============================================
-         КНОПКА SIDEBAR — иконка с индикатором
+         КНОПКА SIDEBAR — полностью кастомный шаблон
+         Hover только вокруг иконки (44x44), не на всю ширину
     ============================================= -->
     <ControlTheme x:Key="SidebarButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}"/>
         <Setter Property="Width" Value="60"/>
         <Setter Property="Height" Value="52"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="Template">
             <ControlTemplate>
-                <Border Background="{TemplateBinding Background}"
-                        CornerRadius="10"
-                        Margin="8,2"
-                        Width="44"
-                        Height="44">
-                    <ContentPresenter HorizontalContentAlignment="Center"
+                <!-- Внешний контейнер прозрачный — строго 60x52, не позволяет Fluent влезть -->
+                <Panel Width="60" Height="52"
+                       Background="Transparent">
+                    <!-- Hover фон — только вокруг иконки 44x44 -->
+                    <Border x:Name="HoverBg"
+                            Width="44" Height="44"
+                            CornerRadius="10"
+                            Background="Transparent"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+                    <!-- Контент (Panel с иконкой и индикатором) -->
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalContentAlignment="Center"
                                       VerticalContentAlignment="Center"
-                                      Content="{TemplateBinding Content}"
-                                      Foreground="{TemplateBinding Foreground}"/>
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"/>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+        <!-- Hover — тёмный фон вокруг иконки -->
+        <Style Selector="^:pointerover /template/ Border#HoverBg">
+            <Setter Property="Background" Value="{StaticResource BrushBgHover}"/>
+        </Style>
+        <!-- Нажатие -->
+        <Style Selector="^:pressed /template/ Border#HoverBg">
+            <Setter Property="Background" Value="#9B59FF"/>
+        </Style>
+    </ControlTheme>
+
+    <!-- Простая кнопка для popup меню — hover на всю ширину -->
+    <ControlTheme x:Key="MenuButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="12,9"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border x:Name="MenuHoverBg"
+                        Background="{TemplateBinding Background}"
+                        CornerRadius="8"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="Center"
+                                      Foreground="{TemplateBinding Foreground}"
+                                      FontSize="{TemplateBinding FontSize}"/>
                 </Border>
             </ControlTemplate>
         </Setter>
-        <Style Selector="^:pointerover /template/ Border">
+        <Style Selector="^:pointerover /template/ Border#MenuHoverBg">
             <Setter Property="Background" Value="{StaticResource BrushBgHover}"/>
         </Style>
     </ControlTheme>
