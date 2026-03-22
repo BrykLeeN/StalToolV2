@@ -1,0 +1,90 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- =============================================
+         БАЗОВЫЕ ЦВЕТА ФОНА
+    ============================================= -->
+    <Color x:Key="BgDeep">#08080C</Color>
+    <Color x:Key="BgBase">#0D0D12</Color>
+    <Color x:Key="BgSurface">#121218</Color>
+    <Color x:Key="BgCard">#161620</Color>
+    <Color x:Key="BgHover">#1C1C28</Color>
+
+    <!-- =============================================
+         АКЦЕНТНЫЕ ЦВЕТА (фиолетово-розовый)
+    ============================================= -->
+    <Color x:Key="AccentPrimary">#9B59FF</Color>
+    <Color x:Key="AccentSecondary">#C855E0</Color>
+    <Color x:Key="AccentPink">#E040C8</Color>
+    <Color x:Key="AccentGlow">#9B59FF33</Color>
+
+    <!-- =============================================
+         ТЕКСТ
+    ============================================= -->
+    <Color x:Key="TextPrimary">#F0F0F8</Color>
+    <Color x:Key="TextSecondary">#888899</Color>
+    <Color x:Key="TextMuted">#444455</Color>
+
+    <!-- =============================================
+         ГРАНИЦЫ
+    ============================================= -->
+    <Color x:Key="BorderSubtle">#1E1E2A</Color>
+    <Color x:Key="BorderDefault">#2A2A3A</Color>
+    <Color x:Key="BorderAccent">#9B59FF44</Color>
+
+    <!-- =============================================
+         СТАТУС
+    ============================================= -->
+    <Color x:Key="ColorProfit">#44FF88</Color>
+    <Color x:Key="ColorLoss">#FF5566</Color>
+    <Color x:Key="ColorWarning">#FFB020</Color>
+
+    <!-- =============================================
+         КИСТИ — SolidColorBrush
+    ============================================= -->
+    <SolidColorBrush x:Key="BrushBgDeep" Color="{StaticResource BgDeep}"/>
+    <SolidColorBrush x:Key="BrushBgBase" Color="{StaticResource BgBase}"/>
+    <SolidColorBrush x:Key="BrushBgSurface" Color="{StaticResource BgSurface}"/>
+    <SolidColorBrush x:Key="BrushBgCard" Color="{StaticResource BgCard}"/>
+    <SolidColorBrush x:Key="BrushBgHover" Color="{StaticResource BgHover}"/>
+    <SolidColorBrush x:Key="BrushAccent" Color="{StaticResource AccentPrimary}"/>
+    <SolidColorBrush x:Key="BrushAccentGlow" Color="{StaticResource AccentGlow}"/>
+    <SolidColorBrush x:Key="BrushTextPrimary" Color="{StaticResource TextPrimary}"/>
+    <SolidColorBrush x:Key="BrushTextSecondary" Color="{StaticResource TextSecondary}"/>
+    <SolidColorBrush x:Key="BrushTextMuted" Color="{StaticResource TextMuted}"/>
+    <SolidColorBrush x:Key="BrushBorder" Color="{StaticResource BorderDefault}"/>
+    <SolidColorBrush x:Key="BrushBorderAccent" Color="{StaticResource BorderAccent}"/>
+    <SolidColorBrush x:Key="BrushProfit" Color="{StaticResource ColorProfit}"/>
+    <SolidColorBrush x:Key="BrushLoss" Color="{StaticResource ColorLoss}"/>
+
+    <!-- =============================================
+         ГРАДИЕНТНЫЕ КИСТИ
+    ============================================= -->
+
+    <!-- Основной акцентный градиент (фиолет → розовый) -->
+    <LinearGradientBrush x:Key="AccentGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#9B59FF"/>
+        <GradientStop Offset="0.5" Color="#C855E0"/>
+        <GradientStop Offset="1" Color="#E040C8"/>
+    </LinearGradientBrush>
+
+    <!-- Горизонтальный градиент для кнопок -->
+    <LinearGradientBrush x:Key="AccentGradientH" StartPoint="0%,50%" EndPoint="100%,50%">
+        <GradientStop Offset="0" Color="#9B59FF"/>
+        <GradientStop Offset="1" Color="#E040C8"/>
+    </LinearGradientBrush>
+
+    <!-- Фоновый градиент карточки-баннера -->
+    <LinearGradientBrush x:Key="BannerGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#1A1228"/>
+        <GradientStop Offset="0.6" Color="#0F0F18"/>
+        <GradientStop Offset="1" Color="#0D0D12"/>
+    </LinearGradientBrush>
+
+    <!-- Градиент сайдбара (сверху вниз, чуть темнее снизу) -->
+    <LinearGradientBrush x:Key="SidebarGradient" StartPoint="50%,0%" EndPoint="50%,100%">
+        <GradientStop Offset="0" Color="#0F0F16"/>
+        <GradientStop Offset="1" Color="#0A0A10"/>
+    </LinearGradientBrush>
+
+</ResourceDictionary>

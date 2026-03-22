@@ -1,0 +1,260 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StalTool.ViewModels"
+        x:Class="StalTool.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="StalTool"
+        Width="1200" Height="750"
+        MinWidth="900" MinHeight="600"
+        Background="Transparent"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        SystemDecorations="Full"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Themes/Colors.axaml"/>
+                <ResourceInclude Source="/Themes/Controls.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <!-- Внешняя обёртка — скруглённые углы + граница -->
+    <Border CornerRadius="16"
+            ClipToBounds="True"
+            BorderThickness="1"
+            BorderBrush="{StaticResource BrushBorder}"
+            Background="{StaticResource BrushBgBase}">
+
+        <Grid ColumnDefinitions="60, *">
+
+            <!-- =============================================
+                 SIDEBAR — узкий 60px, только иконки
+            ============================================= -->
+            <Border Grid.Column="0"
+                    Background="{StaticResource SidebarGradient}"
+                    BorderBrush="{StaticResource BrushBorder}"
+                    BorderThickness="0,0,1,0">
+
+                <Grid RowDefinitions="70, *, Auto">
+
+                    <!-- Логотип — буква S в градиентном квадрате -->
+                    <Border Grid.Row="0"
+                            Width="36" Height="36"
+                            CornerRadius="10"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Offset="0" Color="#9B59FF"/>
+                                <GradientStop Offset="1" Color="#E040C8"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="S"
+                                   FontSize="18"
+                                   FontWeight="Black"
+                                   Foreground="White"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Border>
+
+                    <!-- Навигационные кнопки -->
+                    <StackPanel Grid.Row="1"
+                                VerticalAlignment="Top"
+                                Margin="0,10,0,0"
+                                Spacing="4">
+
+                        <!-- Аукцион (активный) -->
+                        <Button Theme="{StaticResource SidebarButton}"
+                                ToolTip.Tip="Аукцион"
+                                Command="{Binding NavigateToAuctionCommand}">
+                            <Panel>
+                                <!-- Активный индикатор слева -->
+                                <Border Width="3" Height="20"
+                                        CornerRadius="2"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Margin="-4,0,0,0">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="50%,0%" EndPoint="50%,100%">
+                                            <GradientStop Offset="0" Color="#9B59FF"/>
+                                            <GradientStop Offset="1" Color="#E040C8"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <!-- Иконка -->
+                                <TextBlock Text="📈"
+                                           FontSize="20"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Panel>
+                        </Button>
+
+                        <!-- Арсен -->
+                        <Button Theme="{StaticResource SidebarButton}"
+                                ToolTip.Tip="Арсен"
+                                Command="{Binding NavigateToArsenCommand}">
+                            <TextBlock Text="⚔️" FontSize="20"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Button>
+
+                        <!-- История -->
+                        <Button Theme="{StaticResource SidebarButton}"
+                                ToolTip.Tip="История"
+                                Command="{Binding NavigateToHistoryCommand}">
+                            <TextBlock Text="📋" FontSize="20"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Button>
+
+                        <!-- Радар -->
+                        <Button Theme="{StaticResource SidebarButton}"
+                                ToolTip.Tip="Радар"
+                                Command="{Binding NavigateToRadarCommand}">
+                            <TextBlock Text="📡" FontSize="20"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Button>
+
+                    </StackPanel>
+
+                    <!-- Нижние кнопки: настройки + выход -->
+                    <StackPanel Grid.Row="2"
+                                Margin="0,0,0,15"
+                                Spacing="4">
+
+                        <Button Theme="{StaticResource SidebarButton}"
+                                ToolTip.Tip="Настройки"
+                                Command="{Binding NavigateToSettingsCommand}">
+                            <TextBlock Text="⚙️" FontSize="20"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Button>
+
+                    </StackPanel>
+
+                </Grid>
+            </Border>
+
+            <!-- =============================================
+                 ОСНОВНОЙ КОНТЕНТ
+            ============================================= -->
+            <Grid Grid.Column="1" RowDefinitions="48, *">
+
+                <!-- TITLEBAR — перетаскивание + кнопки окна -->
+                <Border x:Name="TitleBar"
+                        Grid.Row="0"
+                        Background="Transparent"
+                        BorderBrush="{StaticResource BrushBorder}"
+                        BorderThickness="0,0,0,1">
+
+                    <Grid ColumnDefinitions="*, Auto" Margin="20,0,12,0">
+
+                        <!-- Название текущей страницы -->
+                        <StackPanel Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    Spacing="10">
+                            <TextBlock Text="{Binding CurrentPageTitle}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource BrushTextPrimary}"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding CurrentPageSubtitle}"
+                                       FontSize="12"
+                                       Foreground="{StaticResource BrushTextMuted}"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Правая часть: пользователь + кнопки окна -->
+                        <StackPanel Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    VerticalAlignment="Center">
+
+                            <!-- Бейдж пользователя -->
+                            <Border CornerRadius="20"
+                                    Background="{StaticResource BrushBgCard}"
+                                    BorderBrush="{StaticResource BrushBorder}"
+                                    BorderThickness="1"
+                                    Padding="10,5">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <!-- Аватар -->
+                                    <Border Width="24" Height="24"
+                                            CornerRadius="12">
+                                        <Border.Background>
+                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                                <GradientStop Offset="0" Color="#9B59FF"/>
+                                                <GradientStop Offset="1" Color="#E040C8"/>
+                                            </LinearGradientBrush>
+                                        </Border.Background>
+                                        <TextBlock Text="{Binding UserInitial}"
+                                                   FontSize="11"
+                                                   FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding Username}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource BrushTextPrimary}"
+                                               VerticalAlignment="Center"/>
+                                    <!-- Тир пользователя -->
+                                    <Border CornerRadius="8"
+                                            Background="{StaticResource BrushAccentGlow}"
+                                            Padding="6,2">
+                                        <TextBlock Text="{Binding UserTier}"
+                                                   FontSize="10"
+                                                   Foreground="{StaticResource BrushAccent}"
+                                                   FontWeight="SemiBold"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Разделитель -->
+                            <Border Width="1" Height="20"
+                                    Background="{StaticResource BrushBorder}"
+                                    Margin="4,0"/>
+
+                            <!-- Свернуть -->
+                            <Button Theme="{StaticResource GhostButton}"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    Command="{Binding MinimizeCommand}">
+                                <TextBlock Text="—"
+                                           FontSize="14"
+                                           Foreground="{StaticResource BrushTextSecondary}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Button>
+
+                            <!-- Закрыть -->
+                            <Button Theme="{StaticResource GhostButton}"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    Command="{Binding CloseCommand}">
+                                <TextBlock Text="✕"
+                                           FontSize="13"
+                                           Foreground="{StaticResource BrushLoss}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Button>
+
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- КОНТЕНТ СТРАНИЦ — сюда будет подставляться активная страница -->
+                <ContentControl Grid.Row="1"
+                                Content="{Binding CurrentPage}"
+                                Background="{StaticResource BrushBgBase}"/>
+
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
