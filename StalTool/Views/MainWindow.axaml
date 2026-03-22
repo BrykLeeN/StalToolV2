@@ -329,8 +329,6 @@
                             <!-- Popup меню пользователя -->
                             <Popup x:Name="UserPopup"
                                    IsOpen="{Binding IsUserMenuOpen, Mode=TwoWay}"
-                                   Opened="UserPopup_Opened"
-                                   Closed="UserPopup_Closed"
                                    Placement="Bottom"
                                    PlacementTarget="{Binding ElementName=UserMenuBtn}"
                                    HorizontalOffset="-80">
@@ -365,6 +363,160 @@
                                     </StackPanel>
                                 </Border>
                             </Popup>
+
+                            <!-- Кнопка уведомлений -->
+                            <Panel>
+                                <!-- Сама кнопка-колокол -->
+                                <Border x:Name="NotifBtn"
+                                        Width="32" Height="32" CornerRadius="16"
+                                        Background="Transparent"
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource BrushBorder}"
+                                        Cursor="Hand"
+                                        PointerPressed="NotifBtn_PointerPressed">
+                                    <Border.Styles>
+                                        <Style Selector="Border:pointerover">
+                                            <Setter Property="Background" Value="#1C1C28"/>
+                                        </Style>
+                                    </Border.Styles>
+                                    <Panel>
+                                        <TextBlock Text="🔔" FontSize="14"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                        <!-- Красная точка — видна только если есть уведомления -->
+                                        <Border Width="8" Height="8" CornerRadius="4"
+                                                Background="#FF5566"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top"
+                                                Margin="0,2,2,0"
+                                                IsVisible="{Binding HasUnreadNotifications}"/>
+                                    </Panel>
+                                </Border>
+
+                                <!-- Popup уведомлений -->
+                                <Popup x:Name="NotifPopup"
+                                       IsOpen="{Binding IsNotifOpen, Mode=TwoWay}"
+                                       Placement="Bottom"
+                                       PlacementTarget="{Binding ElementName=NotifBtn}"
+                                       HorizontalOffset="-160">
+                                    <Border Background="{StaticResource BrushBgCard}"
+                                            BorderBrush="{StaticResource BrushBorder}"
+                                            BorderThickness="1" CornerRadius="12"
+                                            Padding="0" Width="320"
+                                            BoxShadow="0 8 32 0 #000000CC">
+                                        <StackPanel>
+
+                                            <!-- Заголовок попапа -->
+                                            <Grid ColumnDefinitions="*,Auto" Margin="16,12,12,8">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="Уведомления радара"
+                                                               FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="{StaticResource BrushTextPrimary}"
+                                                               VerticalAlignment="Center"/>
+                                                    <!-- Счётчик непрочитанных -->
+                                                    <Border CornerRadius="8" Padding="6,2"
+                                                            Background="#9B59FF22"
+                                                            IsVisible="{Binding HasUnreadNotifications}">
+                                                        <TextBlock Text="{Binding UnreadCount}"
+                                                                   FontSize="10" FontWeight="SemiBold"
+                                                                   Foreground="#9B59FF"/>
+                                                    </Border>
+                                                </StackPanel>
+                                                <!-- Кнопка "Прочитать все" -->
+                                                <Button Grid.Column="1"
+                                                        Content="Прочитать все"
+                                                        Theme="{StaticResource MenuButton}"
+                                                        FontSize="11"
+                                                        Foreground="{StaticResource BrushTextMuted}"
+                                                        Command="{Binding MarkAllReadCommand}"
+                                                        IsVisible="{Binding HasUnreadNotifications}"/>
+                                            </Grid>
+
+                                            <Border Height="1" Background="{StaticResource BrushBorder}"/>
+
+                                            <!-- Список уведомлений -->
+                                            <ScrollViewer MaxHeight="320" Padding="0">
+                                                <ItemsControl ItemsSource="{Binding RadarNotifications}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Border Padding="16,10"
+                                                                    BorderBrush="{StaticResource BrushBorder}"
+                                                                    BorderThickness="0,0,0,1">
+                                                                <Border.Styles>
+                                                                    <Style Selector="Border:pointerover">
+                                                                        <Setter Property="Background" Value="#1C1C28"/>
+                                                                    </Style>
+                                                                </Border.Styles>
+                                                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                                                    <!-- Индикатор непрочитанного -->
+                                                                    <Border Grid.Column="0"
+                                                                            Width="6" Height="6" CornerRadius="3"
+                                                                            Background="#9B59FF"
+                                                                            VerticalAlignment="Center"
+                                                                            Margin="0,0,10,0"
+                                                                            IsVisible="{Binding IsUnread}"/>
+                                                                    <StackPanel Grid.Column="1" Spacing="3">
+                                                                        <!-- Название предмета -->
+                                                                        <TextBlock Text="{Binding ItemName}"
+                                                                                   FontSize="12" FontWeight="SemiBold"
+                                                                                   Foreground="{StaticResource BrushTextPrimary}"/>
+                                                                        <!-- Детали -->
+                                                                        <TextBlock Text="{Binding Description}"
+                                                                                   FontSize="11"
+                                                                                   Foreground="{StaticResource BrushTextSecondary}"/>
+                                                                        <!-- Время -->
+                                                                        <TextBlock Text="{Binding TimeAgo}"
+                                                                                   FontSize="10"
+                                                                                   Foreground="{StaticResource BrushTextMuted}"/>
+                                                                    </StackPanel>
+                                                                    <!-- Цена -->
+                                                                    <TextBlock Grid.Column="2"
+                                                                               Text="{Binding PriceText}"
+                                                                               FontSize="12" FontWeight="SemiBold"
+                                                                               VerticalAlignment="Center"
+                                                                               Margin="8,0,0,0">
+                                                                        <TextBlock.Foreground>
+                                                                            <SolidColorBrush Color="{Binding PriceColor}"/>
+                                                                        </TextBlock.Foreground>
+                                                                    </TextBlock>
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </ScrollViewer>
+
+                                            <!-- Пустое состояние -->
+                                            <Border Padding="16,24"
+                                                    IsVisible="{Binding !HasNotifications}">
+                                                <StackPanel HorizontalAlignment="Center" Spacing="8">
+                                                    <TextBlock Text="🔕" FontSize="28"
+                                                               HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="Нет уведомлений"
+                                                               FontSize="13"
+                                                               Foreground="{StaticResource BrushTextMuted}"
+                                                               HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="Добавьте цели в радаре"
+                                                               FontSize="11"
+                                                               Foreground="{StaticResource BrushTextMuted}"
+                                                               HorizontalAlignment="Center"/>
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Кнопка перейти в радар -->
+                                            <Border Padding="12,8"
+                                                    IsVisible="{Binding HasNotifications}">
+                                                <Button Content="Открыть радар →"
+                                                        Theme="{StaticResource MenuButton}"
+                                                        FontSize="12"
+                                                        Foreground="#9B59FF"
+                                                        HorizontalAlignment="Center"
+                                                        Command="{Binding OpenRadarCommand}"/>
+                                            </Border>
+
+                                        </StackPanel>
+                                    </Border>
+                                </Popup>
+                            </Panel>
 
                             <Border Width="1" Height="20"
                                     Background="{StaticResource BrushBorder}" Margin="4,0"/>

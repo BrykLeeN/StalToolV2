@@ -1,9 +1,12 @@
+using System.Collections.ObjectModel;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StalTool.Models;
 
 namespace StalTool.ViewModels;
 
@@ -24,9 +27,18 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private bool   _isUserMenuOpen = false;
     [ObservableProperty] private string _userMenuArrow  = "▾";
 
+    // ─── Уведомления ─────────────────────────────────────────────────────────
+    [ObservableProperty] private bool _isNotifOpen = false;
+
+    public ObservableCollection<RadarNotification> RadarNotifications { get; } = new();
+
+    public bool HasNotifications       => RadarNotifications.Count > 0;
+    public bool HasUnreadNotifications => RadarNotifications.Any(n => n.IsUnread);
+    public int  UnreadCount            => RadarNotifications.Count(n => n.IsUnread);
+
     // ─── Заголовок страницы ───────────────────────────────────────────────────
-    [ObservableProperty] private string _currentPageTitle    = "Аукцион";
-    [ObservableProperty] private string _currentPageSubtitle = "— аналитика торгов";
+    [ObservableProperty] private string       _currentPageTitle    = "Аукцион";
+    [ObservableProperty] private string       _currentPageSubtitle = "— аналитика торгов";
     [ObservableProperty] private ViewModelBase? _currentPage;
 
     // ─── Активные разделы сайдбара ────────────────────────────────────────────
@@ -37,28 +49,43 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private bool _isSettingsActive = false;
 
     // ─── Вкладки внутри раздела ───────────────────────────────────────────────
-    // HasSubTabs — показывает строку вкладок под titlebar
     [ObservableProperty] private bool   _hasSubTabs  = true;
     [ObservableProperty] private bool   _hasSubTab3  = true;
-
     [ObservableProperty] private string _subTab1Title = "График цен";
     [ObservableProperty] private string _subTab2Title = "История лотов";
     [ObservableProperty] private string _subTab3Title = "Калькулятор";
+    [ObservableProperty] private bool   _isSubTab1Active = true;
+    [ObservableProperty] private bool   _isSubTab2Active = false;
+    [ObservableProperty] private bool   _isSubTab3Active = false;
 
-    [ObservableProperty] private bool _isSubTab1Active = true;
-    [ObservableProperty] private bool _isSubTab2Active = false;
-    [ObservableProperty] private bool _isSubTab3Active = false;
-
+    // ─── Конструктор ─────────────────────────────────────────────────────────
     public MainWindowViewModel()
     {
         ApplyTierColors(UserTier);
+        AddTestNotifications(); // убери когда подключишь RadarManager
     }
 
-    // ─── Меню пользователя ───────────────────────────────────────────────────
+    // ─── Partial-хуки ────────────────────────────────────────────────────────
+    partial void OnIsUserMenuOpenChanged(bool value)
+    {
+        UserMenuArrow = value ? "▴" : "▾";
+    }
+
+    partial void OnIsNotifOpenChanged(bool value)
+    {
+        if (value)
+        {
+            OnPropertyChanged(nameof(UnreadCount));
+            OnPropertyChanged(nameof(HasUnreadNotifications));
+        }
+    }
+
+    // ─── Команды меню пользователя ───────────────────────────────────────────
     [RelayCommand]
     private void ToggleUserMenu()
     {
         IsUserMenuOpen = !IsUserMenuOpen;
+        if (IsUserMenuOpen) IsNotifOpen = false;
     }
 
     [RelayCommand]
@@ -68,9 +95,68 @@ public partial class MainWindowViewModel : ViewModelBase
         // TODO: очистить токен, перейти на LoginPage
     }
 
-    partial void OnIsUserMenuOpenChanged(bool value)
+    // ─── Команды уведомлений ─────────────────────────────────────────────────
+    [RelayCommand]
+    private void ToggleNotif()
     {
-        UserMenuArrow = value ? "▴" : "▾";
+        IsNotifOpen = !IsNotifOpen;
+        if (IsNotifOpen) IsUserMenuOpen = false;
+    }
+
+    [RelayCommand]
+    private void MarkAllRead()
+    {
+        foreach (var n in RadarNotifications)
+            n.IsUnread = false;
+        OnPropertyChanged(nameof(HasUnreadNotifications));
+        OnPropertyChanged(nameof(UnreadCount));
+    }
+
+    [RelayCommand]
+    private void OpenRadar()
+    {
+        IsNotifOpen = false;
+        NavigateToRadar();
+    }
+
+    public void AddNotification(RadarNotification notification)
+    {
+        RadarNotifications.Insert(0, notification);
+        OnPropertyChanged(nameof(HasNotifications));
+        OnPropertyChanged(nameof(HasUnreadNotifications));
+        OnPropertyChanged(nameof(UnreadCount));
+    }
+
+    // Тестовые данные — убери когда подключишь реальный RadarManager
+    public void AddTestNotifications()
+    {
+        AddNotification(new RadarNotification
+        {
+            ItemName    = "АК-74М (Коллекционный)",
+            Description = "Цена упала ниже 5 000 ₽",
+            TimeAgo     = "2 мин назад",
+            PriceText   = "4 820 ₽",
+            PriceColor  = Color.Parse("#44FF88"),
+            IsUnread    = true,
+        });
+        AddNotification(new RadarNotification
+        {
+            ItemName    = "Ящик «Страйкер»",
+            Description = "Цена достигла цели 900 ₽",
+            TimeAgo     = "15 мин назад",
+            PriceText   = "890 ₽",
+            PriceColor  = Color.Parse("#44FF88"),
+            IsUnread    = true,
+        });
+        AddNotification(new RadarNotification
+        {
+            ItemName    = "СВДС (Состаренный)",
+            Description = "Цена выросла выше 14 000 ₽",
+            TimeAgo     = "1 час назад",
+            PriceText   = "14 100 ₽",
+            PriceColor  = Color.Parse("#FF5566"),
+            IsUnread    = false,
+        });
     }
 
     // ─── Сброс активных состояний ────────────────────────────────────────────
@@ -82,6 +168,7 @@ public partial class MainWindowViewModel : ViewModelBase
         IsRadarActive    = false;
         IsSettingsActive = false;
         IsUserMenuOpen   = false;
+        IsNotifOpen      = false;
     }
 
     private void ResetSubTabs()
@@ -99,17 +186,13 @@ public partial class MainWindowViewModel : ViewModelBase
         IsAuctionActive     = true;
         CurrentPageTitle    = "Аукцион";
         CurrentPageSubtitle = "— аналитика торгов";
-
-        // Аукцион имеет 3 вкладки
-        HasSubTabs  = true;
-        HasSubTab3  = true;
+        HasSubTabs   = true;
+        HasSubTab3   = true;
         SubTab1Title = "График цен";
         SubTab2Title = "История лотов";
         SubTab3Title = "Калькулятор";
-
         ResetSubTabs();
         IsSubTab1Active = true;
-        // CurrentPage = new AuctionPriceChartViewModel();
     }
 
     [RelayCommand]
@@ -119,16 +202,12 @@ public partial class MainWindowViewModel : ViewModelBase
         IsArsenActive       = true;
         CurrentPageTitle    = "Арсен";
         CurrentPageSubtitle = "— калькулятор крафта";
-
-        // Арсен: 2 вкладки
         HasSubTabs   = true;
         HasSubTab3   = false;
         SubTab1Title = "Калькулятор";
         SubTab2Title = "История крафта";
-
         ResetSubTabs();
         IsSubTab1Active = true;
-        // CurrentPage = new ArsenCalculatorViewModel();
     }
 
     [RelayCommand]
@@ -138,11 +217,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IsHistoryActive     = true;
         CurrentPageTitle    = "История";
         CurrentPageSubtitle = "— торговые записи";
-
-        // История: без вкладок
         HasSubTabs = false;
         ResetSubTabs();
-        // CurrentPage = new HistoryViewModel();
     }
 
     [RelayCommand]
@@ -152,15 +228,12 @@ public partial class MainWindowViewModel : ViewModelBase
         IsRadarActive       = true;
         CurrentPageTitle    = "Радар";
         CurrentPageSubtitle = "— мониторинг цен";
-
         HasSubTabs   = true;
         HasSubTab3   = false;
         SubTab1Title = "Активные цели";
         SubTab2Title = "Настройки радара";
-
         ResetSubTabs();
         IsSubTab1Active = true;
-        // CurrentPage = new RadarViewModel();
     }
 
     [RelayCommand]
@@ -170,33 +243,19 @@ public partial class MainWindowViewModel : ViewModelBase
         IsSettingsActive    = true;
         CurrentPageTitle    = "Настройки";
         CurrentPageSubtitle = "";
-
         HasSubTabs = false;
         ResetSubTabs();
-        // CurrentPage = new SettingsViewModel();
     }
 
     // ─── Навигация по вкладкам ────────────────────────────────────────────────
     [RelayCommand]
-    private void NavigateToSubTab1()
-    {
-        ResetSubTabs();
-        IsSubTab1Active = true;
-    }
+    private void NavigateToSubTab1() { ResetSubTabs(); IsSubTab1Active = true; }
 
     [RelayCommand]
-    private void NavigateToSubTab2()
-    {
-        ResetSubTabs();
-        IsSubTab2Active = true;
-    }
+    private void NavigateToSubTab2() { ResetSubTabs(); IsSubTab2Active = true; }
 
     [RelayCommand]
-    private void NavigateToSubTab3()
-    {
-        ResetSubTabs();
-        IsSubTab3Active = true;
-    }
+    private void NavigateToSubTab3() { ResetSubTabs(); IsSubTab3Active = true; }
 
     // ─── Цвета тира ──────────────────────────────────────────────────────────
     private void ApplyTierColors(string tier)

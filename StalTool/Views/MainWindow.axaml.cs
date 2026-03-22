@@ -1,3 +1,4 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -8,8 +9,6 @@ namespace StalTool.Views;
 
 public partial class MainWindow : Window
 {
-    private Popup? _userPopup;
-
     public MainWindow()
     {
         InitializeComponent();
@@ -18,8 +17,6 @@ public partial class MainWindow : Window
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-
-        // Перетаскивание окна
         var titleBar = this.FindControl<Border>("TitleBar");
         if (titleBar != null)
             titleBar.PointerPressed += (s, ev) =>
@@ -27,13 +24,11 @@ public partial class MainWindow : Window
                 if (ev.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
                     BeginMoveDrag(ev);
             };
-
-        _userPopup ??= this.FindControl<Popup>("UserPopup");
     }
 
     private MainWindowViewModel? VM => DataContext as MainWindowViewModel;
 
-    // Навигация по сайдбару
+    // ─── Навигация по сайдбару ───────────────────────────────────────────────
     private void NavBtn_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
@@ -48,32 +43,27 @@ public partial class MainWindow : Window
         }
     }
 
-    // Профиль — открыть/закрыть popup
+    // ─── Профиль ─────────────────────────────────────────────────────────────
     private void UserMenu_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
         if (VM == null) return;
-
-        _userPopup ??= this.FindControl<Popup>("UserPopup");
-        var popupIsOpen = _userPopup?.IsOpen ?? VM.IsUserMenuOpen;
-        VM.IsUserMenuOpen = !popupIsOpen;
-
+        if (VM.IsNotifOpen) VM.IsNotifOpen = false;
+        VM.ToggleUserMenuCommand.Execute(null);
+        e.Handled = true;
+    }
+    
+    // ─── Уведомления ─────────────────────────────────────────────────────────
+    private void NotifBtn_PointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        if (VM == null) return;
+        if (VM.IsUserMenuOpen) VM.IsUserMenuOpen = false;
+        VM.ToggleNotifCommand.Execute(null);
         e.Handled = true;
     }
 
-    private void UserPopup_Opened(object? sender, System.EventArgs e)
-    {
-        if (VM != null)
-            VM.IsUserMenuOpen = true;
-    }
-
-    private void UserPopup_Closed(object? sender, System.EventArgs e)
-    {
-        if (VM != null)
-            VM.IsUserMenuOpen = false;
-    }
-
-    // Вкладки
+    // ─── Вкладки ─────────────────────────────────────────────────────────────
     private void SubTab_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
@@ -86,7 +76,7 @@ public partial class MainWindow : Window
         }
     }
 
-    // Кнопки окна
+    // ─── Кнопки окна ─────────────────────────────────────────────────────────
     private void MinimizeBtn_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
