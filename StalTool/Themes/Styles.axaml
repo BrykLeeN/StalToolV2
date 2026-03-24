@@ -61,6 +61,30 @@
     </Style>
 
     <!-- =============================================
+         NOTIFICATION BUTTON — кнопка уведомлений в titlebar
+         Использование: Classes="NotifBtn"
+    ============================================= -->
+    <Style Selector="Border.NotifBtn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.18"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.18"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.NotifBtn:pointerover">
+        <Setter Property="Background" Value="#1C1C28"/>
+        <Setter Property="BorderBrush" Value="#50506A"/>
+        <Setter Property="BoxShadow" Value="0 0 0 1 #50506A55"/>
+    </Style>
+    <Style Selector="Border.NotifBtn:pressed">
+        <Setter Property="Background" Value="#2A233B"/>
+        <Setter Property="BorderBrush" Value="#666684"/>
+        <Setter Property="BoxShadow" Value="0 0 0 1 #66668455"/>
+    </Style>
+
+    <!-- =============================================
          TAB BUTTON — вкладки под заголовком
          Использование: Classes="TabBtn"
     ============================================= -->
@@ -76,7 +100,7 @@
 
     <!-- =============================================
          PROFILE BUTTON — кнопка профиля
-         Использование: Classes="ProfileBtn"
+         Используется в Classes="ProfileBtn"
     ============================================= -->
     <Style Selector="Border.ProfileBtn">
         <Setter Property="Cursor" Value="Hand"/>

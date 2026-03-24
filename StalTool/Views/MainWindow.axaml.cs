@@ -1,6 +1,4 @@
-using System;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using StalTool.ViewModels;
@@ -24,9 +22,10 @@ public partial class MainWindow : Window
                 if (ev.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
                     BeginMoveDrag(ev);
             };
+
     }
 
-    private MainWindowViewModel? VM => DataContext as MainWindowViewModel;
+    private MainWindowViewModel? Vm => DataContext as MainWindowViewModel;
 
     // ─── Навигация по сайдбару ───────────────────────────────────────────────
     private void NavBtn_PointerPressed(object? sender, PointerPressedEventArgs e)
@@ -35,11 +34,11 @@ public partial class MainWindow : Window
         var tag = (sender as Control)?.Tag?.ToString();
         switch (tag)
         {
-            case "Auction":  VM?.NavigateToAuctionCommand.Execute(null);  break;
-            case "Arsen":    VM?.NavigateToArsenCommand.Execute(null);    break;
-            case "History":  VM?.NavigateToHistoryCommand.Execute(null);  break;
-            case "Radar":    VM?.NavigateToRadarCommand.Execute(null);    break;
-            case "Settings": VM?.NavigateToSettingsCommand.Execute(null); break;
+            case "Auction":  Vm?.NavigateToAuctionCommand.Execute(null);  break;
+            case "Arsen":    Vm?.NavigateToArsenCommand.Execute(null);    break;
+            case "History":  Vm?.NavigateToHistoryCommand.Execute(null);  break;
+            case "Radar":    Vm?.NavigateToRadarCommand.Execute(null);    break;
+            case "Settings": Vm?.NavigateToSettingsCommand.Execute(null); break;
         }
     }
 
@@ -47,9 +46,9 @@ public partial class MainWindow : Window
     private void UserMenu_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
-        if (VM == null) return;
-        if (VM.IsNotifOpen) VM.IsNotifOpen = false;
-        VM.ToggleUserMenuCommand.Execute(null);
+        if (Vm == null) return;
+        if (Vm.IsNotifOpen) Vm.IsNotifOpen = false;
+        Vm.ToggleUserMenuCommand.Execute(null);
         e.Handled = true;
     }
     
@@ -57,9 +56,9 @@ public partial class MainWindow : Window
     private void NotifBtn_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
-        if (VM == null) return;
-        if (VM.IsUserMenuOpen) VM.IsUserMenuOpen = false;
-        VM.ToggleNotifCommand.Execute(null);
+        if (Vm == null) return;
+        if (Vm.IsUserMenuOpen) Vm.IsUserMenuOpen = false;
+        Vm.ToggleNotifCommand.Execute(null);
         e.Handled = true;
     }
 
@@ -70,9 +69,9 @@ public partial class MainWindow : Window
         var tag = (sender as Control)?.Tag?.ToString();
         switch (tag)
         {
-            case "1": VM?.NavigateToSubTab1Command.Execute(null); break;
-            case "2": VM?.NavigateToSubTab2Command.Execute(null); break;
-            case "3": VM?.NavigateToSubTab3Command.Execute(null); break;
+            case "1": Vm?.NavigateToSubTab1Command.Execute(null); break;
+            case "2": Vm?.NavigateToSubTab2Command.Execute(null); break;
+            case "3": Vm?.NavigateToSubTab3Command.Execute(null); break;
         }
     }
 
@@ -80,12 +79,12 @@ public partial class MainWindow : Window
     private void MinimizeBtn_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            VM?.MinimizeCommand.Execute(null);
+            Vm?.MinimizeCommand.Execute(null);
     }
 
     private void CloseBtn_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            VM?.CloseCommand.Execute(null);
+            Vm?.CloseCommand.Execute(null);
     }
 }
