@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace StalTool.ViewModels;
+namespace StalTool.ViewModels.Base;
 
 public abstract class ViewModelBase : ObservableObject
 {

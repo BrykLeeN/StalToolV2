@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
-using StalTool.ViewModels;
 
 namespace StalTool;
 
@@ -32,6 +31,6 @@ public class ViewLocator : IDataTemplate
 
     public bool Match(object? data)
     {
-        return data is ViewModelBase;
+        return data is ViewModels.Base.ViewModelBase;
     }
 }

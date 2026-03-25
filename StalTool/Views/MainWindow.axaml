@@ -1,6 +1,8 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:StalTool.ViewModels"
+        xmlns:vmAuction="using:StalTool.ViewModels.Auction"
+        xmlns:pages="using:StalTool.Views.Pages"
         x:Class="StalTool.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="StalTool"
@@ -22,6 +24,12 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
+    
+    <Window.DataTemplates>
+        <DataTemplate DataType="vmAuction:AuctionViewModel">
+            <pages:AuctionPriceChartPage DataContext="{Binding PriceChartSection}" />
+        </DataTemplate>
+    </Window.DataTemplates>
 
     <Border CornerRadius="16" ClipToBounds="True"
             BorderThickness="1"

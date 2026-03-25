@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 using Newtonsoft.Json; // <-- ПОДКЛЮЧАЕМ НАШ НАДЕЖНЫЙ ПАРСЕР
 
-namespace SatlTool.Services;
+namespace StalTool.Services;
 
 public class ApiService
 {
@@ -13,8 +11,6 @@ public class ApiService
     
     static ApiService() { }
     
-    // === ЖЕЛЕЗОБЕТОННЫЕ КЛАССЫ ДЛЯ РЕЛИЗНОЙ ВЕРСИИ ===
-    // [JsonProperty] защищает от удаления при компиляции и от обфускаторов
     public class AuthRequest
     {
         [JsonProperty("Username")] public string Username { get; set; }

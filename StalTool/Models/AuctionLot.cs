@@ -1,33 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
+
+namespace StalTool.Models;
 
 public class AuctionLot
 {
-    public string itemId { get; set; }
-    public int amount { get; set; }
-    public long startPrice { get; set; }
-    public long currentPrice { get; set; }
-    public long buyoutPrice { get; set; }
-    public DateTime startTime { get; set; }
-    public DateTime endTime { get; set; }
-}
+    public string ItemId { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string IconPath { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public string Rank { get; set; } = string.Empty;
 
-public class AuctionResponse
-{
-    public long total { get; set; }
-    public List<AuctionLot> lots { get; set; }
-}
+    public int Amount { get; set; }
+    public long StartPrice { get; set; }
+    public long CurrentPrice { get; set; }
+    public long BuyoutPrice { get; set; }
 
-// --- А ЭТО НОВОЕ: ДЛЯ ГРАФИКА (ИСТОРИЯ ПРОДАЖ) ---
-public class HistoryPrice
-{
-    public int amount { get; set; }
-    public long price { get; set; }
-    public DateTime time { get; set; }
-}
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
 
-public class AuctionHistoryResponse
-{
-    public long total { get; set; }
-    public List<HistoryPrice> prices { get; set; }
+    public string PriceStatus { get; set; } = "Норма";
 }
