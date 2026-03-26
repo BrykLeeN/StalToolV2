@@ -56,6 +56,9 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     public string MinPriceText => $"{Stats.MinPrice:N0} ₽";
     public string AvgPriceText => $"{Stats.AveragePrice:N0} ₽";
     public string MaxPriceText => $"{Stats.MaxPrice:N0} ₽";
+    public string CurrentPriceText => PriceHistory.Count > 0
+        ? $"{PriceHistory.Last().Value:N0} ₽"
+        : AvgPriceText;
     public string RecommendationText => Stats.RecommendationText;
     public string TrendText => Stats.TrendText;
 
@@ -75,6 +78,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
     partial void OnStatsChanged(PriceStats value)
     {
+        OnPropertyChanged(nameof(CurrentPriceText));
         OnPropertyChanged(nameof(MinPriceText));
         OnPropertyChanged(nameof(AvgPriceText));
         OnPropertyChanged(nameof(MaxPriceText));
@@ -112,6 +116,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         PriceHistory.Clear();
         foreach (var point in _auctionService.GetMockPriceHistory(SelectedItem.ItemId, SelectedPeriod))
             PriceHistory.Add(point);
+        OnPropertyChanged(nameof(CurrentPriceText));
 
         ActiveLots.Clear();
         foreach (var lot in _auctionService.GetMockActiveLots(SelectedItem.ItemId))

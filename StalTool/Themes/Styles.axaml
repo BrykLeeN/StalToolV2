@@ -6,14 +6,14 @@
     ============================================= -->
     <Style Selector="ScrollBar">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Width" Value="6"/>
+        <Setter Property="Width" Value="8"/>
     </Style>
     <Style Selector="ScrollBar /template/ Thumb">
-        <Setter Property="Background" Value="#9B59FF44"/>
-        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Background" Value="#9F6BFFAA"/>
+        <Setter Property="CornerRadius" Value="4"/>
     </Style>
     <Style Selector="ScrollBar /template/ Thumb:pointerover">
-        <Setter Property="Background" Value="#9B59FF88"/>
+        <Setter Property="Background" Value="#B181FF"/>
     </Style>
 
     <!-- =============================================
