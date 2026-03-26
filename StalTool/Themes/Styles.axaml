@@ -6,14 +6,14 @@
     ============================================= -->
     <Style Selector="ScrollBar">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Width" Value="8"/>
+        <Setter Property="Width" Value="6"/>
     </Style>
     <Style Selector="ScrollBar /template/ Thumb">
-        <Setter Property="Background" Value="#9F6BFFAA"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Background" Value="#9B59FF44"/>
+        <Setter Property="CornerRadius" Value="3"/>
     </Style>
     <Style Selector="ScrollBar /template/ Thumb:pointerover">
-        <Setter Property="Background" Value="#B181FF"/>
+        <Setter Property="Background" Value="#9B59FF88"/>
     </Style>
 
     <!-- =============================================
@@ -110,6 +110,100 @@
     </Style>
     <Style Selector="Border.ProfileBtn:pointerover">
         <Setter Property="Background" Value="#1A1A28"/>
+    </Style>
+
+    <!-- =============================================
+         AUCTION PAGE — локальные стили вкладки аукциона
+    ============================================= -->
+    <Style Selector=".AuctionPriceChartPage ScrollViewer ScrollBar">
+        <Setter Property="Width" Value="8"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage ScrollViewer ScrollBar /template/ Thumb">
+        <Setter Property="Background" Value="#A666FF"/>
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage ScrollViewer ScrollBar /template/ Thumb:pointerover">
+        <Setter Property="Background" Value="#C786FF"/>
+    </Style>
+
+    <Style Selector=".AuctionPriceChartPage ToggleButton.CategoryToggle">
+        <Setter Property="Background" Value="#1A142B"/>
+        <Setter Property="BorderBrush" Value="#4D3586"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Padding" Value="10,8"/>
+        <Setter Property="Foreground" Value="#D6D0ED"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage ToggleButton.CategoryToggle:pointerover">
+        <Setter Property="Background" Value="#211738"/>
+        <Setter Property="BorderBrush" Value="#6A4AB2"/>
+        <Setter Property="Foreground" Value="#EFE8FF"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage ToggleButton.CategoryToggle:checked">
+        <Setter Property="Background" Value="#241A40"/>
+        <Setter Property="BorderBrush" Value="#7A57C9"/>
+        <Setter Property="Foreground" Value="#F6F1FF"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage ToggleButton.CategoryToggle:pressed">
+        <Setter Property="Background" Value="#2C1F4B"/>
+        <Setter Property="BorderBrush" Value="#8A63E3"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage ToggleButton.CategoryToggle:checked TextBlock.CategoryTitle">
+        <Setter Property="Foreground" Value="#F6F1FF"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage TextBlock.CategoryArrow">
+        <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+        <Setter Property="RenderTransform" Value="rotate(0deg)"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage ToggleButton.CategoryToggle:checked TextBlock.CategoryArrow">
+        <Setter Property="RenderTransform" Value="rotate(180deg)"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage Button.CategoryItemBtn">
+        <Setter Property="Background" Value="#171329"/>
+        <Setter Property="BorderBrush" Value="#523790"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage Button.CategoryItemBtn:pointerover">
+        <Setter Property="Background" Value="#20193A"/>
+        <Setter Property="BorderBrush" Value="#7652C5"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage Button.CategoryItemBtn:pressed">
+        <Setter Property="Background" Value="#2A1F4B"/>
+        <Setter Property="BorderBrush" Value="#8C67E0"/>
     </Style>
 
     <!-- ListBox без фона -->

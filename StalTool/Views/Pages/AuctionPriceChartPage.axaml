@@ -4,17 +4,18 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:StalTool.ViewModels.Auction.Sections"
     x:Name="Root"
+    Classes="AuctionPriceChartPage"
     x:DataType="vm:AuctionPriceChartViewModel">
 
-    <Grid Margin="18"
+    <Grid Margin="14"
           ColumnDefinitions="280,1.55*,1.25*"
           RowDefinitions="1.35*,0.85*"
-          ColumnSpacing="16"
-          RowSpacing="16">
+          ColumnSpacing="12"
+          RowSpacing="12">
 
         <Border Grid.Column="0"
                 Grid.RowSpan="2"
-                Background="#100D1B"
+                Background="#0A090F"
                 BorderBrush="#251A3E"
                 BorderThickness="1"
                 CornerRadius="22"
@@ -34,37 +35,37 @@
                     <ItemsControl ItemsSource="{Binding Categories}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Expander IsExpanded="True"
-                                          Margin="0,0,0,10"
-                                          Background="Transparent"
-                                          BorderBrush="Transparent"
-                                          BorderThickness="0"
-                                          CornerRadius="0"
-                                          Padding="0">
-                                    <Expander.Header>
-                                        <Border Background="#0DFFFFFF"
-                                                BorderBrush="#2A2146"
-                                                BorderThickness="1"
-                                                CornerRadius="10"
-                                                Padding="10,8"
-                                                BoxShadow="0 6 16 #00000030">
+                                <StackPanel Margin="0,0,0,10"
+                                            Spacing="8">
+                                    <ToggleButton x:Name="CategoryToggle"
+                                                  Classes="CategoryToggle"
+                                                  IsChecked="True"
+                                                  Focusable="False">
+                                        <Grid ColumnDefinitions="*,Auto"
+                                              ColumnSpacing="8">
                                             <TextBlock Text="{Binding CategoryName}"
-                                                       Foreground="#CEC7E4"
+                                                       Classes="CategoryTitle"
+                                                       Foreground="#D6D0ED"
                                                        FontSize="14"
-                                                       FontWeight="SemiBold"/>
-                                        </Border>
-                                    </Expander.Header>
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1"
+                                                       Classes="CategoryArrow"
+                                                       Text="⌄"
+                                                       Foreground="#CDBFFF"
+                                                       FontSize="18"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </ToggleButton>
+
                                     <ItemsControl ItemsSource="{Binding Items}"
-                                                  Margin="0,8,0,0">
+                                                  Margin="8,0,8,0"
+                                                  IsVisible="{Binding #CategoryToggle.IsChecked}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Button Command="{ReflectionBinding DataContext.SelectItemCommand, ElementName=Root}"
+                                                        Classes="CategoryItemBtn"
                                                         CommandParameter="{Binding .}"
-                                                        Background="#0DFFFFFF"
-                                                        BorderBrush="#2E2450"
-                                                        BorderThickness="1"
-                                                        CornerRadius="12"
-                                                        Padding="12,10"
                                                         Margin="0,0,0,8"
                                                         HorizontalContentAlignment="Stretch">
                                                     <Grid ColumnDefinitions="*,Auto"
@@ -75,7 +76,9 @@
                                                                    VerticalAlignment="Center"
                                                                    TextTrimming="CharacterEllipsis"/>
                                                         <Border Grid.Column="1"
-                                                                Background="#231A3E"
+                                                                Background="#261B42"
+                                                                BorderBrush="#5A3D99"
+                                                                BorderThickness="1"
                                                                 CornerRadius="8"
                                                                 Padding="7,2"
                                                                 VerticalAlignment="Center">
@@ -88,7 +91,7 @@
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
-                                </Expander>
+                                </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -99,7 +102,7 @@
         <Border Grid.Column="1"
                 Grid.Row="0"
                 Grid.ColumnSpan="2"
-                Background="#100D1B"
+                Background="#0A090F"
                 BorderBrush="#251A3E"
                 BorderThickness="1"
                 CornerRadius="22"
@@ -129,7 +132,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Height="360"
+                            <Grid Height="350"
                                   VerticalAlignment="Bottom">
                                 <Border Width="28"
                                         Height="{Binding Height}"
@@ -163,131 +166,25 @@
 
         <Border Grid.Column="1"
                 Grid.Row="1"
-                Background="#100D1B"
+                Background="#0A090F"
                 BorderBrush="#251A3E"
                 BorderThickness="1"
                 CornerRadius="20"
                 Padding="14">
-            <Grid RowDefinitions="Auto,Auto,Auto,*"
-                  ColumnDefinitions="1*,1*"
-                  RowSpacing="12"
-                  ColumnSpacing="12">
-                <Border Grid.Row="0"
-                        Grid.Column="0"
-                        Background="#0DFFFFFF"
-                        BorderBrush="#30224F"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="12,10"
-                        BoxShadow="0 8 18 #0000002E">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="Текущая"
-                                   Foreground="#9E96BA"
-                                   FontSize="12"/>
-                        <TextBlock Text="{Binding CurrentPriceText}"
-                                   Foreground="#F2EDFF"
-                                   FontSize="22"
-                                   FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Row="0"
-                        Grid.Column="1"
-                        Background="#0DFFFFFF"
-                        BorderBrush="#30224F"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="12,10"
-                        BoxShadow="0 8 18 #0000002E">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="Минимум"
-                                   Foreground="#9E96BA"
-                                   FontSize="12"/>
-                        <TextBlock Text="{Binding MinPriceText}"
-                                   Foreground="#F2EDFF"
-                                   FontSize="22"
-                                   FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Row="1"
-                        Grid.Column="0"
-                        Background="#0DFFFFFF"
-                        BorderBrush="#30224F"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="12,10"
-                        BoxShadow="0 8 18 #0000002E">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="Средняя"
-                                   Foreground="#9E96BA"
-                                   FontSize="12"/>
-                        <TextBlock Text="{Binding AvgPriceText}"
-                                   Foreground="#F2EDFF"
-                                   FontSize="22"
-                                   FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Row="1"
-                        Grid.Column="1"
-                        Background="#0DFFFFFF"
-                        BorderBrush="#30224F"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="12,10"
-                        BoxShadow="0 8 18 #0000002E">
-                    <StackPanel Spacing="2">
-                        <TextBlock Text="Максимум"
-                                   Foreground="#9E96BA"
-                                   FontSize="12"/>
-                        <TextBlock Text="{Binding MaxPriceText}"
-                                   Foreground="#F2EDFF"
-                                   FontSize="22"
-                                   FontWeight="SemiBold"/>
-                    </StackPanel>
-                </Border>
-
-                <Border Grid.Row="2"
-                        Grid.ColumnSpan="2"
-                        Background="#0DFFFFFF"
-                        BorderBrush="#30224F"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="12,10"
-                        BoxShadow="0 8 18 #0000002E">
-                    <Grid ColumnDefinitions="*,Auto"
-                          ColumnSpacing="10">
-                        <StackPanel Spacing="2">
-                            <TextBlock Text="Тренд"
-                                       Foreground="#9E96BA"
-                                       FontSize="12"/>
-                            <TextBlock Text="{Binding TrendText}"
-                                       Foreground="#E0D9F8"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding TrendDisplayText}"
-                                   Foreground="{Binding TrendBrush}"
-                                   FontSize="24"
-                                   FontWeight="Bold"
-                                   VerticalAlignment="Center"/>
-                    </Grid>
-                </Border>
-
-                <Grid Grid.Row="3"
-                      Grid.ColumnSpan="2"
+            <Grid RowDefinitions="Auto,Auto,Auto"
+                  RowSpacing="10">
+                <Grid Grid.Row="0"
                       ColumnDefinitions="*,Auto"
                       ColumnSpacing="10"
                       VerticalAlignment="Center">
                     <TextBlock Text="{Binding RecommendationText}"
-                               Foreground="#8E86AB"
+                               Foreground="#9D94BC"
                                FontSize="12"
                                VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis"/>
                     <ItemsControl Grid.Column="1"
-                                  ItemsSource="{Binding Periods}">
+                                  ItemsSource="{Binding Periods}"
+                                  HorizontalAlignment="Right">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal"
@@ -303,20 +200,127 @@
                                         Height="34"
                                         Padding="12,0"
                                         CornerRadius="10"
-                                        Background="#171327"
-                                        BorderBrush="#31244F"
+                                        Background="#19142A"
+                                        BorderBrush="#52348E"
                                         BorderThickness="1"
-                                        Foreground="#E6E1F7"/>
+                                        Foreground="#EFE9FF"/>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                </Grid>
+
+                <Grid Grid.Row="1"
+                      ColumnDefinitions="1*,1*,1*"
+                      ColumnSpacing="10">
+                    <Border Grid.Column="0"
+                            Background="#0CFFFFFF"
+                            BorderBrush="#4A3382"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="12,10"
+                            BoxShadow="0 10 20 #00000033">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Текущая"
+                                       Foreground="#A9A0CA"
+                                       FontSize="12"/>
+                            <TextBlock Text="{Binding CurrentPriceText}"
+                                       Foreground="#FFFFFF"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1"
+                            Background="#0CFFFFFF"
+                            BorderBrush="#4A3382"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="12,10"
+                            BoxShadow="0 10 20 #00000033">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Минимум"
+                                       Foreground="#A9A0CA"
+                                       FontSize="12"/>
+                            <TextBlock Text="{Binding MinPriceText}"
+                                       Foreground="#FFFFFF"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2"
+                            Background="#0CFFFFFF"
+                            BorderBrush="#4A3382"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="12,10"
+                            BoxShadow="0 10 20 #00000033">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Средняя"
+                                       Foreground="#A9A0CA"
+                                       FontSize="12"/>
+                            <TextBlock Text="{Binding AvgPriceText}"
+                                       Foreground="#FFFFFF"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid Grid.Row="2"
+                      ColumnDefinitions="1*,1*"
+                      ColumnSpacing="10">
+                    <Border Grid.Column="0"
+                            Background="#0CFFFFFF"
+                            BorderBrush="#4A3382"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="12,10"
+                            BoxShadow="0 10 20 #00000033">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Максимум"
+                                       Foreground="#A9A0CA"
+                                       FontSize="12"/>
+                            <TextBlock Text="{Binding MaxPriceText}"
+                                       Foreground="#FFFFFF"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="1"
+                            Background="#0CFFFFFF"
+                            BorderBrush="#4A3382"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="12,10"
+                            BoxShadow="0 10 20 #00000033">
+                        <Grid ColumnDefinitions="*,Auto"
+                              ColumnSpacing="10">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Тренд"
+                                           Foreground="#A9A0CA"
+                                           FontSize="12"/>
+                                <TextBlock Text="{Binding TrendText}"
+                                           Foreground="#FFFFFF"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding TrendDisplayText}"
+                                       Foreground="{Binding TrendBrush}"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
                 </Grid>
             </Grid>
         </Border>
 
         <Border Grid.Column="2"
                 Grid.Row="1"
-                Background="#100D1B"
+                Background="#0A090F"
                 BorderBrush="#251A3E"
                 BorderThickness="1"
                 CornerRadius="20"
@@ -335,8 +339,8 @@
                     <ItemsControl ItemsSource="{Binding ActiveLots}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#0DFFFFFF"
-                                        BorderBrush="#30224F"
+                                <Border Background="#15111F"
+                                        BorderBrush="#4A3382"
                                         BorderThickness="1"
                                         CornerRadius="16"
                                         Padding="12"
