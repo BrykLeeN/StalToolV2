@@ -12,23 +12,31 @@
           RowDefinitions="1.35*,0.85*"
           ColumnSpacing="12"
           RowSpacing="12">
-
         <Border Grid.Column="0"
                 Grid.RowSpan="2"
-                Background="#0A090F"
-                BorderBrush="#251A3E"
+                Background="{DynamicResource BrushBgDeep}"
+                BorderBrush="{DynamicResource BrushBorder}"
                 BorderThickness="1"
                 CornerRadius="22"
                 Padding="14">
-            <Grid RowDefinitions="Auto,*">
+            <Grid RowDefinitions="Auto,Auto,*"
+                  RowSpacing="10">
                 <TextBlock Grid.Row="0"
                            Text="Категории"
-                           Foreground="#F3EEFF"
+                           Foreground="{DynamicResource BrushTextPrimary}"
                            FontSize="18"
-                           FontWeight="SemiBold"
-                           Margin="0,0,0,12"/>
+                           FontWeight="SemiBold"/>
 
-                <ScrollViewer Grid.Row="1"
+                <Border Grid.Row="1"
+                        Classes="AuctionCategorySearchFrame"
+                        HorizontalAlignment="Stretch">
+                    <TextBox Text="{Binding SearchText}"
+                             Watermark="Поиск предмета..."
+                             Classes="AuctionCategorySearchInner"
+                             HorizontalAlignment="Stretch"/>
+                </Border>
+
+                <ScrollViewer Grid.Row="2"
                               Padding="0,0,6,0"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
@@ -39,39 +47,48 @@
                                             Spacing="8">
                                     <ToggleButton x:Name="CategoryToggle"
                                                   Classes="CategoryToggle"
-                                                  IsChecked="True"
+                                                  Classes.HasSelectedItem="{Binding HasSelectedItem}"
+                                                  IsChecked="{Binding IsExpanded}"
                                                   Focusable="False">
-                                        <Grid ColumnDefinitions="*,Auto"
+                                        <Grid ColumnDefinitions="Auto,*,Auto"
                                               ColumnSpacing="8">
+                                            <Border Width="8"
+                                                    Height="8"
+                                                    CornerRadius="8"
+                                                    Background="{DynamicResource BrushAppAccent}"
+                                                    IsVisible="{Binding ShowCollapsedSelectedIndicator}"
+                                                    VerticalAlignment="Center"/>
                                             <TextBlock Text="{Binding CategoryName}"
+                                                       Grid.Column="1"
                                                        Classes="CategoryTitle"
-                                                       Foreground="#D6D0ED"
+                                                       Foreground="{DynamicResource BrushTextSecondary}"
                                                        FontSize="14"
                                                        FontWeight="SemiBold"
                                                        VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1"
+                                            <TextBlock Grid.Column="2"
                                                        Classes="CategoryArrow"
                                                        Text="⌄"
-                                                       Foreground="#CDBFFF"
+                                                       Foreground="{DynamicResource BrushTextPrimary}"
                                                        FontSize="18"
                                                        VerticalAlignment="Center"/>
                                         </Grid>
                                     </ToggleButton>
 
-                                    <ItemsControl ItemsSource="{Binding Items}"
+                                    <ItemsControl ItemsSource="{Binding FilteredItems}"
                                                   Margin="8,0,8,0"
-                                                  IsVisible="{Binding #CategoryToggle.IsChecked}">
+                                                  IsVisible="{Binding IsExpanded}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
                                                 <Button Command="{ReflectionBinding DataContext.SelectItemCommand, ElementName=Root}"
                                                         Classes="CategoryItemBtn"
+                                                        Classes.SelectedItem="{Binding IsSelected}"
                                                         CommandParameter="{Binding .}"
                                                         Margin="0,0,0,8"
                                                         HorizontalContentAlignment="Stretch">
                                                     <Grid ColumnDefinitions="*,Auto"
                                                           ColumnSpacing="8">
                                                         <TextBlock Text="{Binding DisplayName}"
-                                                                   Foreground="#ECE8F8"
+                                                                   Foreground="{DynamicResource BrushTextPrimary}"
                                                                    FontSize="13"
                                                                    VerticalAlignment="Center"
                                                                    TextTrimming="CharacterEllipsis"/>
@@ -83,7 +100,7 @@
                                                                 Padding="7,2"
                                                                 VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding Rank}"
-                                                                       Foreground="#C9A7FF"
+                                                                       Foreground="{DynamicResource BrushTextPrimary}"
                                                                        FontSize="10"/>
                                                         </Border>
                                                     </Grid>
@@ -102,8 +119,8 @@
         <Border Grid.Column="1"
                 Grid.Row="0"
                 Grid.ColumnSpan="2"
-                Background="#0A090F"
-                BorderBrush="#251A3E"
+                Background="{DynamicResource BrushBgDeep}"
+                BorderBrush="{DynamicResource BrushBorder}"
                 BorderThickness="1"
                 CornerRadius="22"
                 Padding="18">
@@ -113,11 +130,11 @@
                             Spacing="2"
                             HorizontalAlignment="Left">
                     <TextBlock Text="История цены"
-                               Foreground="#8D86A6"
+                               Foreground="{DynamicResource BrushTextSecondary}"
                                FontSize="14"
                                HorizontalAlignment="Left"/>
                     <TextBlock Text="{Binding SelectedItemName}"
-                               Foreground="#FFFFFF"
+                               Foreground="{DynamicResource BrushTextPrimary}"
                                FontSize="38"
                                FontWeight="Bold"
                                HorizontalAlignment="Left"/>
@@ -156,7 +173,7 @@
                         <DataTemplate>
                             <TextBlock Text="{Binding Label}"
                                        HorizontalAlignment="Center"
-                                       Foreground="#787194"
+                                       Foreground="{DynamicResource BrushTextMuted}"
                                        FontSize="11"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -166,8 +183,8 @@
 
         <Border Grid.Column="1"
                 Grid.Row="1"
-                Background="#0A090F"
-                BorderBrush="#251A3E"
+                Background="{DynamicResource BrushBgDeep}"
+                BorderBrush="{DynamicResource BrushBorder}"
                 BorderThickness="1"
                 CornerRadius="20"
                 Padding="14">
@@ -178,35 +195,58 @@
                       ColumnSpacing="10"
                       VerticalAlignment="Center">
                     <TextBlock Text="{Binding RecommendationText}"
-                               Foreground="#9D94BC"
+                               Foreground="{DynamicResource BrushTextSecondary}"
                                FontSize="12"
                                VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis"/>
-                    <ItemsControl Grid.Column="1"
-                                  ItemsSource="{Binding Periods}"
-                                  HorizontalAlignment="Right">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"
-                                            Spacing="8"/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Button Command="{ReflectionBinding DataContext.SetPeriodCommand, ElementName=Root}"
-                                        CommandParameter="{Binding .}"
-                                        Content="{Binding .}"
-                                        MinWidth="54"
-                                        Height="34"
-                                        Padding="12,0"
-                                        CornerRadius="10"
-                                        Background="#19142A"
-                                        BorderBrush="#52348E"
-                                        BorderThickness="1"
-                                        Foreground="#EFE9FF"/>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                    <Grid Grid.Column="1">
+                        <Button x:Name="CalendarToggleButton"
+                                Classes="AuctionCalendarTrigger"
+                                Content="{Binding SelectedDayText}"
+                                Command="{Binding ToggleCalendarCommand}"
+                                HorizontalAlignment="Right"/>
+                        <Popup IsOpen="{Binding IsCalendarOpen, Mode=TwoWay}"
+                               IsLightDismissEnabled="True"
+                               OverlayDismissEventPassThrough="True"
+                               ShouldUseOverlayLayer="True"
+                               Topmost="True"
+                               Placement="BottomEdgeAlignedRight"
+                               PlacementTarget="{Binding #CalendarToggleButton}"
+                               VerticalOffset="8">
+                            <Border Classes="AuctionCalendarPanel">
+                                <StackPanel Spacing="6">
+                                    <UniformGrid Columns="7">
+                                        <TextBlock Text="Пн" Classes="AuctionCalendarWeekLabel"/>
+                                        <TextBlock Text="Вт" Classes="AuctionCalendarWeekLabel"/>
+                                        <TextBlock Text="Ср" Classes="AuctionCalendarWeekLabel"/>
+                                        <TextBlock Text="Чт" Classes="AuctionCalendarWeekLabel"/>
+                                        <TextBlock Text="Пт" Classes="AuctionCalendarWeekLabel"/>
+                                        <TextBlock Text="Сб" Classes="AuctionCalendarWeekLabel"/>
+                                        <TextBlock Text="Вс" Classes="AuctionCalendarWeekLabel"/>
+                                    </UniformGrid>
+                                    <ItemsControl ItemsSource="{Binding CalendarDays}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid Columns="7"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Classes="AuctionDayCell"
+                                                        Classes.SelectedDayCell="{Binding IsSelected}"
+                                                        Classes.DisabledDayCell="{Binding IsUnavailable}"
+                                                        Classes.PlaceholderDayCell="{Binding IsPlaceholder}"
+                                                        IsEnabled="{Binding IsAvailable}"
+                                                        Command="{ReflectionBinding DataContext.SelectDayCommand, ElementName=Root}"
+                                                        CommandParameter="{Binding Date}"
+                                                        Content="{Binding DayNumber}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
                 </Grid>
 
                 <Grid Grid.Row="1"

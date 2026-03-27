@@ -43,11 +43,10 @@ public class AuctionService
         };
     }
 
-    public ObservableCollection<PricePoint> GetMockPriceHistory(string itemId, string periodKey)
+    public ObservableCollection<PricePoint> GetMockPriceBuffer(string itemId)
     {
-        var now = DateTime.Now;
-
-        List<double> values = itemId switch
+        var now = DateTime.Now.Date;
+        List<double> seededValues = itemId switch
         {
             "svds" => new() { 14800, 14650, 14520, 14480, 14320, 14150, 14000 },
             "ash12" => new() { 26500, 26200, 25800, 25500, 25100, 24800, 24500 },
@@ -56,25 +55,25 @@ public class AuctionService
             _ => new() { 5900, 5750, 5620, 5480, 5530, 5450, 5380 }
         };
 
-        int count = periodKey switch
-        {
-            "1D" => 8,
-            "3D" => 12,
-            "7D" => 14,
-            "30D" => 20,
-            _ => 12
-        };
-
         var points = new ObservableCollection<PricePoint>();
+        const int daysInBuffer = 21;
+        const int salesPerDay = 4;
 
-        for (int i = 0; i < count; i++)
+        for (int dayOffset = daysInBuffer - 1; dayOffset >= 0; dayOffset--)
         {
-            var value = values[i % values.Count];
-            points.Add(new PricePoint
+            var date = now.AddDays(-dayOffset);
+            var dayBase = seededValues[(daysInBuffer - 1 - dayOffset) % seededValues.Count];
+
+            for (int saleIndex = 0; saleIndex < salesPerDay; saleIndex++)
             {
-                Time = now.AddDays(-(count - 1 - i)),
-                Value = value
-            });
+                var hour = 9 + (saleIndex * 3);
+                var variance = (saleIndex - 1.5) * 35;
+                points.Add(new PricePoint
+                {
+                    Time = date.AddHours(hour),
+                    Value = dayBase + variance
+                });
+            }
         }
 
         return points;

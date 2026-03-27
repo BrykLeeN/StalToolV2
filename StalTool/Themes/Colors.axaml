@@ -49,6 +49,8 @@
     <SolidColorBrush x:Key="BrushBgHover" Color="{StaticResource BgHover}"/>
     <SolidColorBrush x:Key="BrushAccent" Color="{StaticResource AccentPrimary}"/>
     <SolidColorBrush x:Key="BrushAccentGlow" Color="{StaticResource AccentGlow}"/>
+    <SolidColorBrush x:Key="BrushAppAccent" Color="{StaticResource AccentPrimary}"/>
+    <SolidColorBrush x:Key="BrushAppBorderAccent" Color="{StaticResource BorderAccent}"/>
     <SolidColorBrush x:Key="BrushTextPrimary" Color="{StaticResource TextPrimary}"/>
     <SolidColorBrush x:Key="BrushTextSecondary" Color="{StaticResource TextSecondary}"/>
     <SolidColorBrush x:Key="BrushTextMuted" Color="{StaticResource TextMuted}"/>
@@ -56,6 +58,13 @@
     <SolidColorBrush x:Key="BrushBorderAccent" Color="{StaticResource BorderAccent}"/>
     <SolidColorBrush x:Key="BrushProfit" Color="{StaticResource ColorProfit}"/>
     <SolidColorBrush x:Key="BrushLoss" Color="{StaticResource ColorLoss}"/>
+    <Color x:Key="SystemAccentColor">#9B59FF</Color>
+    <Color x:Key="SystemAccentColorDark1">#8E50ED</Color>
+    <Color x:Key="SystemAccentColorDark2">#7F46D5</Color>
+    <Color x:Key="SystemAccentColorDark3">#6E3CBC</Color>
+    <Color x:Key="SystemAccentColorLight1">#AA6BFF</Color>
+    <Color x:Key="SystemAccentColorLight2">#B983FF</Color>
+    <Color x:Key="SystemAccentColorLight3">#CA9CFF</Color>
 
     <!-- =============================================
          ГРАДИЕНТНЫЕ КИСТИ
