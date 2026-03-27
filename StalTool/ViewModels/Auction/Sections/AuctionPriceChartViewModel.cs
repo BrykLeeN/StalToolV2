@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Media;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StalTool.Models;
 using StalTool.Services;
+using System.Threading.Tasks;
 
 namespace StalTool.ViewModels.Auction.Sections;
 
@@ -144,10 +146,16 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
     private void LoadCategories()
     {
+        LoadCategoriesInternal(_auctionService.GetCategoriesFromCacheOrMock());
+        _ = RefreshCategoriesFromGitHubAsync();
+    }
+
+    private void LoadCategoriesInternal(IEnumerable<AuctionCategoryGroup> groups)
+    {
         _allCategories.Clear();
         Categories.Clear();
 
-        foreach (var category in _auctionService.GetMockCategories())
+        foreach (var category in groups)
         {
             category.FilteredItems = new ObservableCollection<AuctionCatalogItem>(category.Items);
             category.IsExpanded = false;
@@ -160,6 +168,25 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
             _allCategories.Add(category);
             Categories.Add(category);
         }
+    }
+
+    private async Task RefreshCategoriesFromGitHubAsync()
+    {
+        var remote = await _auctionService.RefreshCategoriesFromGitHubAsync();
+        if (remote.Count == 0)
+            return;
+
+        var selectedId = SelectedItem?.ItemId;
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            LoadCategoriesInternal(remote);
+            ApplyCategoryFilter();
+
+            var candidate = !string.IsNullOrWhiteSpace(selectedId)
+                ? Categories.SelectMany(x => x.Items).FirstOrDefault(x => x.ItemId == selectedId)
+                : null;
+            SelectedItem = candidate ?? Categories.SelectMany(x => x.Items).FirstOrDefault();
+        });
     }
 
     private void ApplyCategoryFilter()
@@ -296,7 +323,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         OnPropertyChanged(nameof(CurrentPriceText));
 
         ActiveLots.Clear();
-        foreach (var lot in _auctionService.GetMockActiveLots(SelectedItem.ItemId))
+        foreach (var lot in _auctionService.GetMockActiveLots(SelectedItem))
             ActiveLots.Add(lot);
 
         Stats = _auctionService.BuildStats(PriceHistory);
