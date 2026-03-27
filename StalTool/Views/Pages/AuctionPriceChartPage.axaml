@@ -8,6 +8,9 @@
     x:DataType="vm:AuctionPriceChartViewModel">
 
     <Grid Margin="14"
+          Background="Transparent"
+          Focusable="True"
+          PointerPressed="OnRootPointerPressed"
           ColumnDefinitions="280,1.55*,1.25*"
           RowDefinitions="1.35*,0.85*"
           ColumnSpacing="12"

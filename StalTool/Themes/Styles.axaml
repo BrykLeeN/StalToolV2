@@ -224,18 +224,55 @@
         <Setter Property="BorderThickness" Value="1.15"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage Border.AuctionCategorySearchFrame:focus-within">
+        <Setter Property="Background" Value="#130F1F"/>
         <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
-        <Setter Property="BorderThickness" Value="1.25"/>
+        <Setter Property="BorderThickness" Value="1.3"/>
         <Setter Property="CornerRadius" Value="14"/>
-        <Setter Property="BoxShadow" Value="0 0 0 1 #9B59FF55"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="CornerRadius" Value="13"/>
         <Setter Property="Foreground" Value="{DynamicResource BrushTextPrimary}"/>
         <Setter Property="Padding" Value="9,6"/>
         <Setter Property="FocusAdorner" Value="{x:Null}"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner:focus">
+        <Setter Property="Background" Value="#130F1F"/>
+        <Setter Property="BorderThickness" Value="1.05"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
+        <Setter Property="CornerRadius" Value="13"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner /template/ Border#border">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="CornerRadius" Value="13"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner /template/ Border#borderElement">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="CornerRadius" Value="13"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner:focus /template/ Border#border">
+        <Setter Property="Background" Value="#130F1F"/>
+        <Setter Property="BorderThickness" Value="1.05"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
+        <Setter Property="CornerRadius" Value="13"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner:focus /template/ Border#borderElement">
+        <Setter Property="Background" Value="#130F1F"/>
+        <Setter Property="BorderThickness" Value="1.05"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
+        <Setter Property="CornerRadius" Value="13"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner:focus /template/ Border#PART_BorderElement">
+        <Setter Property="Background" Value="#130F1F"/>
+        <Setter Property="BorderThickness" Value="1.05"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
+        <Setter Property="CornerRadius" Value="13"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage Button.AuctionCalendarTrigger">
         <Setter Property="Background" Value="#19142A"/>
