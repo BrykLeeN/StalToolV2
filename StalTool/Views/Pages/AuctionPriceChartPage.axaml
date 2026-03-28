@@ -9,6 +9,7 @@
     x:DataType="vm:AuctionPriceChartViewModel">
     <UserControl.Resources>
         <conv:IconPathToBitmapConverter x:Key="IconPathToBitmapConverter"/>
+        <conv:RankToBrushConverter x:Key="RankToBrushConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="14"
@@ -115,14 +116,14 @@
                                                                    VerticalAlignment="Center"
                                                                    TextTrimming="CharacterEllipsis"/>
                                                         <Border Grid.Column="2"
-                                                                Background="#261B42"
-                                                                BorderBrush="#5A3D99"
+                                                                Background="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=background}"
+                                                                BorderBrush="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=border}"
                                                                 BorderThickness="1"
                                                                 CornerRadius="8"
                                                                 Padding="7,2"
                                                                 VerticalAlignment="Center">
                                                             <TextBlock Text="{Binding Rank}"
-                                                                       Foreground="{DynamicResource BrushTextPrimary}"
+                                                                       Foreground="{Binding Rank, Converter={StaticResource RankToBrushConverter}}"
                                                                        FontSize="10"/>
                                                         </Border>
                                                     </Grid>

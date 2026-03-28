@@ -1,0 +1,4 @@
+<Project>
+  <!-- Disable Avalonia build telemetry target to avoid startup/build crashes in restricted environments. -->
+  <Target Name="AvaloniaStats" />
+</Project>

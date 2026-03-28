@@ -21,6 +21,49 @@ public class AuctionService
     private const string DefaultIcon = "avares://StalTool/Assets/appicons.png";
     private static readonly HttpClient Http = CreateHttpClient();
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private static readonly Dictionary<string, string> CategoryTranslations = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["armor"] = "Броня",
+        ["artefact"] = "Артефакты",
+        ["artifact"] = "Артефакты",
+        ["attachment"] = "Модули",
+        ["attachments"] = "Модули",
+        ["backpack"] = "Рюкзаки",
+        ["backpacks"] = "Рюкзаки",
+        ["bullet"] = "Патроны",
+        ["bullets"] = "Патроны",
+        ["ammo"] = "Патроны",
+        ["container"] = "Контейнеры",
+        ["containers"] = "Контейнеры",
+        ["case"] = "Контейнеры",
+        ["cases"] = "Контейнеры",
+        ["drink"] = "Напитки",
+        ["drinks"] = "Напитки",
+        ["food"] = "Еда",
+        ["grenade"] = "Гранаты",
+        ["grenades"] = "Гранаты",
+        ["medicine"] = "Медицина",
+        ["medical"] = "Медицина",
+        ["medicines"] = "Медицина",
+        ["medkit"] = "Медицина",
+        ["medkits"] = "Медицина",
+        ["misc"] = "Разное",
+        ["miscellaneous"] = "Разное",
+        ["other"] = "Разное",
+        ["weapon"] = "Оружие",
+        ["weapons"] = "Оружие",
+        ["gun"] = "Оружие",
+        ["guns"] = "Оружие",
+        ["melee"] = "Ближний бой",
+        ["resource"] = "Ресурсы",
+        ["resources"] = "Ресурсы",
+        ["consumables"] = "Расходники",
+        ["consumable"] = "Расходники",
+        ["parts"] = "Запчасти",
+        ["part"] = "Запчасти",
+        ["device"] = "Устройства",
+        ["devices"] = "Устройства"
+    };
 
     // Можно переопределить переменными окружения:
     // STALTOOL_GITHUB_OWNER, STALTOOL_GITHUB_REPO, STALTOOL_GITHUB_BRANCH, STALTOOL_STALCRAFT_REALM
@@ -306,7 +349,7 @@ public class AuctionService
                 {
                     ItemId = string.IsNullOrWhiteSpace(x.ItemId) ? Slugify(x.DisplayName!) : x.ItemId!,
                     DisplayName = x.DisplayName!,
-                    Category = string.IsNullOrWhiteSpace(x.Category) ? "Без категории" : x.Category!,
+                    Category = NormalizeCategory(x.Category),
                     Rank = string.IsNullOrWhiteSpace(x.Rank) ? "common" : x.Rank!,
                     IconPath = NormalizeIconPath(x.IconPath)
                 })
@@ -345,7 +388,7 @@ public class AuctionService
     private static ObservableCollection<AuctionCategoryGroup> BuildCategories(IEnumerable<AuctionCatalogItem> items)
     {
         return new ObservableCollection<AuctionCategoryGroup>(
-            items.GroupBy(x => string.IsNullOrWhiteSpace(x.Category) ? "Без категории" : x.Category)
+            items.GroupBy(x => NormalizeCategory(x.Category))
                 .OrderBy(g => g.Key, StringComparer.Create(new CultureInfo("ru-RU"), ignoreCase: true))
                 .Select(g => new AuctionCategoryGroup
                 {
@@ -413,7 +456,7 @@ public class AuctionService
 
         if (obj["items"] is JsonArray itemsArray)
         {
-            var category = obj["category"]?.GetValue<string>() ?? defaultCategory;
+            var category = NormalizeCategory(obj["category"]?.GetValue<string>() ?? defaultCategory);
             items.AddRange(ParseItemArray(itemsArray, category));
             return items;
         }
@@ -421,7 +464,7 @@ public class AuctionService
         foreach (var kv in obj)
         {
             if (kv.Value is JsonArray categoryItems)
-                items.AddRange(ParseItemArray(categoryItems, kv.Key));
+                items.AddRange(ParseItemArray(categoryItems, NormalizeCategory(kv.Key)));
         }
 
         return items;
@@ -440,7 +483,7 @@ public class AuctionService
             var itemId = entry["itemId"]?.GetValue<string>()
                          ?? entry["id"]?.GetValue<string>()
                          ?? Slugify(name);
-            var category = entry["category"]?.GetValue<string>() ?? fallbackCategory;
+            var category = NormalizeCategory(entry["category"]?.GetValue<string>() ?? fallbackCategory);
             var rank = entry["rank"]?.GetValue<string>() ?? "common";
             var icon = entry["icon"]?.GetValue<string>()
                        ?? entry["iconUrl"]?.GetValue<string>()
@@ -450,7 +493,7 @@ public class AuctionService
             {
                 ItemId = SlugifyOrFallback(itemId, name),
                 DisplayName = name.Trim(),
-                Category = string.IsNullOrWhiteSpace(category) ? "Без категории" : category.Trim(),
+                Category = NormalizeCategory(category),
                 Rank = string.IsNullOrWhiteSpace(rank) ? "common" : rank.Trim().ToLowerInvariant(),
                 IconPath = icon?.Trim() ?? string.Empty
             };
@@ -597,7 +640,7 @@ public class AuctionService
             return "Без категории";
 
         var firstSegment = raw.Split('/', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? raw;
-        return firstSegment.Replace('_', ' ').Replace('-', ' ').Trim();
+        return NormalizeCategory(firstSegment.Replace('_', ' ').Replace('-', ' ').Trim());
     }
 
     private static bool TryParseStalcraftItemObject(JsonObject obj, string defaultCategory, out AuctionCatalogItem item)
@@ -627,11 +670,30 @@ public class AuctionService
         {
             ItemId = id,
             DisplayName = displayName.Trim(),
-            Category = string.IsNullOrWhiteSpace(category) ? "Без категории" : category.Trim(),
+            Category = NormalizeCategory(category),
             Rank = NormalizeRank(color),
             IconPath = string.Empty
         };
         return true;
+    }
+
+    private static string NormalizeCategory(string? rawCategory)
+    {
+        if (string.IsNullOrWhiteSpace(rawCategory))
+            return "Без категории";
+
+        var trimmed = rawCategory.Trim();
+        if (CategoryTranslations.TryGetValue(trimmed, out var direct))
+            return direct;
+
+        var normalized = Regex.Replace(trimmed.ToLowerInvariant(), @"[^a-zа-яё0-9]+", " ").Trim();
+        if (string.IsNullOrWhiteSpace(normalized))
+            return "Без категории";
+
+        if (CategoryTranslations.TryGetValue(normalized, out var translated))
+            return translated;
+
+        return trimmed;
     }
 
     private static string NormalizeRank(string color)
