@@ -63,6 +63,12 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     [ObservableProperty]
     private IBrush _trendBrush = new SolidColorBrush(Color.Parse("#A855F7"));
 
+    [ObservableProperty]
+    private string _selectedSaleText = "Продажа не выбрана";
+
+    [ObservableProperty]
+    private string _selectedAverageText = "Выберите столбцы для усреднения";
+
     public string SelectedItemName => SelectedItem?.DisplayName ?? "Предмет не выбран";
     public string SelectedDayText => SelectedDay?.ToString("dd.MM.yyyy") ?? "День не выбран";
     public string MinPriceText => $"{Stats.MinPrice:N0} ₽";
@@ -142,6 +148,32 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     private void CloseCalendar()
     {
         IsCalendarOpen = false;
+    }
+
+    [RelayCommand]
+    private void ToggleChartBarSelection(ChartBarItem? bar)
+    {
+        if (bar is null)
+            return;
+
+        bar.IsSelected = !bar.IsSelected;
+        SelectedSaleText = $"Продажа: {bar.Time:dd.MM HH:mm} - {bar.Value:N0} ₽";
+        UpdateBarBrushes();
+        UpdateSelectedAverageText();
+    }
+
+    [RelayCommand]
+    private void ClearSaleSelection()
+    {
+        if (!ChartBars.Any(x => x.IsSelected))
+            return;
+
+        foreach (var bar in ChartBars)
+            bar.IsSelected = false;
+
+        SelectedSaleText = "Продажа не выбрана";
+        UpdateBarBrushes();
+        SelectedAverageText = "Выберите столбцы для усреднения";
     }
 
     private void LoadCategories()
@@ -311,12 +343,10 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
             return;
 
         var selectedDate = SelectedDay.Value.Date;
-        var startDate = selectedDate.AddDays(-2);
+        var generatedSales = GenerateRandomSales(SelectedItem.ItemId, selectedDate);
 
         PriceHistory.Clear();
-        foreach (var point in _priceBufferByItem[SelectedItem.ItemId]
-                     .Where(x => x.Time.Date >= startDate && x.Time.Date <= selectedDate)
-                     .OrderBy(x => x.Time))
+        foreach (var point in generatedSales)
         {
             PriceHistory.Add(point);
         }
@@ -338,55 +368,116 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
             _ => new SolidColorBrush(Color.Parse("#A855F7"))
         };
 
-        BuildChartBars();
+        BuildChartBars(generatedSales);
     }
 
-    private void BuildChartBars()
+    private List<PricePoint> GenerateRandomSales(string itemId, DateTime selectedDate)
+    {
+        var seed = HashCode.Combine(itemId.ToLowerInvariant(), selectedDate.Date);
+        var random = new Random(seed);
+        var count = random.Next(16, 34);
+        var points = new List<PricePoint>(count);
+
+        for (int i = 0; i < count; i++)
+        {
+            var minute = (int)Math.Round((double)i / Math.Max(1, count - 1) * (24 * 60 - 1));
+            minute = Math.Clamp(minute + random.Next(-20, 21), 0, 24 * 60 - 1);
+            var value = random.NextInt64(100_000, 30_000_001);
+
+            points.Add(new PricePoint
+            {
+                Time = selectedDate.Date.AddMinutes(minute),
+                Value = value
+            });
+        }
+
+        return points.OrderBy(x => x.Time).ToList();
+    }
+
+    private void BuildChartBars(IReadOnlyList<PricePoint> sales)
     {
         ChartBars.Clear();
+        SelectedSaleText = "Продажа не выбрана";
+        SelectedAverageText = "Выберите столбцы для усреднения";
 
-        if (PriceHistory.Count == 0)
+        if (sales.Count == 0)
             return;
 
-        var max = PriceHistory.Max(x => x.Value);
+        var max = sales.Max(x => x.Value);
         if (max <= 0)
             max = 1;
 
-        foreach (var point in PriceHistory)
+        foreach (var sale in sales)
         {
-            var normalized = point.Value / max;
-            var height = 22 + (normalized * 170);
-            var label = point.Time.Date == SelectedDay?.Date
-                ? point.Time.ToString("HH:mm")
-                : point.Time.ToString("dd.MM");
-
+            var normalized = sale.Value / max;
+            var height = 20 + (normalized * 240);
             ChartBars.Add(new ChartBarItem
             {
-                Label = label,
-                ValueText = $"{point.Value:N0}",
+                Time = sale.Time,
+                Value = sale.Value,
+                Label = sale.Time.ToString("HH:mm"),
+                ValueText = $"{sale.Value:N0} ₽",
                 Height = height,
-                Fill = CreateBarBrush(normalized)
+                IsSelected = false,
+                Fill = CreateBarBrush(normalized, isSelected: false)
             });
         }
     }
 
-    private static IBrush CreateBarBrush(double normalized)
+    private void UpdateSelectedAverageText()
     {
+        var selected = ChartBars.Where(x => x.IsSelected).ToList();
+        if (selected.Count == 0)
+        {
+            SelectedAverageText = "Выберите столбцы для усреднения";
+            return;
+        }
+
+        var average = selected.Average(x => x.Value);
+        SelectedAverageText = $"Выбрано: {selected.Count} | Средняя: {average:N0} ₽";
+    }
+
+    private void UpdateBarBrushes()
+    {
+        if (ChartBars.Count == 0)
+            return;
+
+        var max = ChartBars.Max(x => x.Value);
+        if (max <= 0)
+            max = 1;
+
+        foreach (var bar in ChartBars)
+        {
+            var normalized = bar.Value / max;
+            bar.Fill = CreateBarBrush(normalized, bar.IsSelected);
+        }
+    }
+
+    private static IBrush CreateBarBrush(double normalized, bool isSelected)
+    {
+        if (isSelected)
+            return new SolidColorBrush(Color.Parse("#FFD45A"));
+
         if (normalized >= 0.85)
             return new SolidColorBrush(Color.Parse("#D946EF"));
-
         if (normalized >= 0.60)
             return new SolidColorBrush(Color.Parse("#A855F7"));
-
         return new SolidColorBrush(Color.Parse("#7C3AED"));
     }
 
     public partial class ChartBarItem : ObservableObject
     {
+        public DateTime Time { get; set; }
+        public double Value { get; set; }
         public string Label { get; set; } = string.Empty;
         public string ValueText { get; set; } = string.Empty;
         public double Height { get; set; }
-        public IBrush Fill { get; set; } = Brushes.Transparent;
+
+        [ObservableProperty]
+        private bool _isSelected;
+
+        [ObservableProperty]
+        private IBrush _fill = Brushes.Transparent;
     }
 
     public partial class CalendarDayCell : ObservableObject

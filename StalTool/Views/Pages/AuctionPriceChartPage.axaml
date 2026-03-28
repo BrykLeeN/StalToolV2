@@ -172,35 +172,58 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Height="350"
-                                  VerticalAlignment="Bottom">
-                                <Border Width="28"
-                                        Height="{Binding Height}"
-                                        Background="{Binding Fill}"
-                                        CornerRadius="12,12,4,4"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Bottom"/>
-                            </Grid>
+                            <StackPanel Spacing="4"
+                                        VerticalAlignment="Bottom">
+                                <Button Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="0"
+                                        Command="{ReflectionBinding DataContext.ToggleChartBarSelectionCommand, ElementName=Root}"
+                                        CommandParameter="{Binding .}">
+                                    <ToolTip.Tip>
+                                        <TextBlock Text="{Binding ValueText}"/>
+                                    </ToolTip.Tip>
+                                    <Grid Height="270"
+                                          Width="20"
+                                          VerticalAlignment="Bottom">
+                                        <Border Width="16"
+                                                Height="{Binding Height}"
+                                                Background="{Binding Fill}"
+                                                CornerRadius="10,10,4,4"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Bottom"/>
+                                    </Grid>
+                                </Button>
+                                <TextBlock Text="{Binding Label}"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource BrushTextMuted}"
+                                           FontSize="10"/>
+                            </StackPanel>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <ItemsControl Grid.Row="2"
-                              ItemsSource="{Binding ChartBars}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Rows="1"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Label}"
-                                       HorizontalAlignment="Center"
-                                       Foreground="{DynamicResource BrushTextMuted}"
-                                       FontSize="11"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <Grid Grid.Row="2"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="10">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding SelectedSaleText}"
+                                   Foreground="{DynamicResource BrushTextSecondary}"
+                                   FontSize="12"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding SelectedAverageText}"
+                                   Foreground="{DynamicResource BrushTextPrimary}"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Classes="AuctionCalendarTrigger"
+                            Content="Сбросить выбор"
+                            Command="{Binding ClearSaleSelectionCommand}"
+                            MinWidth="130"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"/>
+                </Grid>
             </Grid>
         </Border>
 
