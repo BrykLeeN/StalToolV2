@@ -21,6 +21,30 @@ public class AuctionService
     private const string DefaultIcon = "avares://StalTool/Assets/appicons.png";
     private static readonly HttpClient Http = CreateHttpClient();
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private static readonly string[] ArtifactQualityOrder =
+    {
+        "common",
+        "uncommon",
+        "special",
+        "rare",
+        "exceptional",
+        "legendary"
+    };
+    private static readonly Dictionary<string, string> ArtifactQualityDisplayName = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["common"] = "Обычный",
+        ["uncommon"] = "Необычный",
+        ["special"] = "Особый",
+        ["rare"] = "Редкий",
+        ["exceptional"] = "Исключительный",
+        ["legendary"] = "Легендарный"
+    };
+    private static readonly HashSet<string> ArtifactQualityTokens = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "common", "uncommon", "special", "rare", "exceptional", "legendary", "epic", "master",
+        "обычный", "необычный", "особый", "редкий", "исключительный", "легендарный",
+        "серый", "зеленый", "зелёный", "синий", "розовый", "красный", "золотой", "желтый", "жёлтый"
+    };
     private static readonly Dictionary<string, string> CategoryTranslations = new(StringComparer.OrdinalIgnoreCase)
     {
         ["armor"] = "Броня",
@@ -151,7 +175,7 @@ public class AuctionService
             }
 
             SaveItemsCache(parsedItems);
-            return BuildCategories(parsedItems);
+            return BuildCategories(ExpandArtifactQualities(parsedItems));
         }
         catch (Exception ex)
         {
@@ -356,6 +380,7 @@ public class AuctionService
                 .ToList();
 
             items = DeduplicateItems(items);
+            items = ExpandArtifactQualities(items);
 
             return BuildCategories(items);
         }
@@ -705,9 +730,130 @@ public class AuctionService
             return "legendary";
         if (c.Contains("veteran"))
             return "epic";
+        if (c.Contains("uncommon") || c.Contains("newbie"))
+            return "common";
         if (c.Contains("stalker"))
             return "rare";
         return "common";
+    }
+
+    private static List<AuctionCatalogItem> ExpandArtifactQualities(List<AuctionCatalogItem> items)
+    {
+        var artifacts = items
+            .Where(x => string.Equals(x.Category, "Артефакты", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        if (artifacts.Count == 0)
+            return items;
+
+        var notArtifacts = items
+            .Where(x => !string.Equals(x.Category, "Артефакты", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var expandedArtifacts = artifacts
+            .GroupBy(GetArtifactBaseKey, StringComparer.OrdinalIgnoreCase)
+            .Where(g => !string.IsNullOrWhiteSpace(g.Key))
+            .Select(group =>
+            {
+                var representative = group
+                    .OrderByDescending(x => !string.IsNullOrWhiteSpace(x.IconPath))
+                    .ThenByDescending(x => x.DisplayName.Length)
+                    .First();
+
+                var baseName = GetArtifactBaseName(representative);
+                var baseId = SlugifyOrFallback(GetArtifactBaseId(representative), representative.ItemId);
+                var iconByRank = group
+                    .GroupBy(x => NormalizeArtifactQualityRank(x.Rank), StringComparer.OrdinalIgnoreCase)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.OrderByDescending(x => !string.IsNullOrWhiteSpace(x.IconPath))
+                            .Select(x => x.IconPath)
+                            .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x)) ?? DefaultIcon,
+                        StringComparer.OrdinalIgnoreCase);
+
+                var qualityItems = ArtifactQualityOrder.Select(rank => new AuctionCatalogItem
+                {
+                    ItemId = $"{baseId}_{rank}",
+                    DisplayName = $"{baseName} - {ArtifactQualityDisplayName[rank]}",
+                    Category = "Артефакты",
+                    Rank = ToArtifactRankKey(rank),
+                    IconPath = iconByRank.TryGetValue(rank, out var icon) ? icon : NormalizeIconPath(representative.IconPath)
+                }).ToList();
+
+                return new AuctionCatalogItem
+                {
+                    ItemId = baseId,
+                    DisplayName = baseName,
+                    Category = "Артефакты",
+                    Rank = string.Empty,
+                    IconPath = NormalizeIconPath(representative.IconPath),
+                    HasQualityVariants = true,
+                    QualityVariants = new ObservableCollection<AuctionCatalogItem>(qualityItems)
+                };
+            })
+            .ToList();
+
+        notArtifacts.AddRange(expandedArtifacts);
+        return notArtifacts;
+    }
+
+    private static string GetArtifactBaseKey(AuctionCatalogItem item)
+    {
+        var byId = GetArtifactBaseId(item);
+        if (!string.IsNullOrWhiteSpace(byId))
+            return byId;
+
+        return Slugify(GetArtifactBaseName(item));
+    }
+
+    private static string GetArtifactBaseId(AuctionCatalogItem item)
+    {
+        if (string.IsNullOrWhiteSpace(item.ItemId))
+            return string.Empty;
+
+        var id = item.ItemId.Trim();
+        var parts = id.Split('_', StringSplitOptions.RemoveEmptyEntries).ToList();
+        if (parts.Count == 0)
+            return id;
+
+        while (parts.Count > 0 && ArtifactQualityTokens.Contains(parts[^1]))
+            parts.RemoveAt(parts.Count - 1);
+
+        return parts.Count == 0 ? id : string.Join('_', parts);
+    }
+
+    private static string GetArtifactBaseName(AuctionCatalogItem item)
+    {
+        if (string.IsNullOrWhiteSpace(item.DisplayName))
+            return item.ItemId;
+
+        var words = Regex.Split(item.DisplayName.Trim(), @"[\s\-_()\[\]/]+")
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .ToList();
+        if (words.Count == 0)
+            return item.DisplayName.Trim();
+
+        while (words.Count > 0 && ArtifactQualityTokens.Contains(words[^1]))
+            words.RemoveAt(words.Count - 1);
+
+        var result = string.Join(' ', words).Trim();
+        return string.IsNullOrWhiteSpace(result) ? item.DisplayName.Trim() : result;
+    }
+
+    private static string NormalizeArtifactQualityRank(string? rank)
+    {
+        var normalized = (rank ?? string.Empty).Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "master" => "exceptional",
+            "epic" => "rare",
+            "rare" => "special",
+            _ => normalized
+        };
+    }
+
+    private static string ToArtifactRankKey(string rank)
+    {
+        return $"artifact_{rank}";
     }
 
     private static List<AuctionCatalogItem> DeduplicateItems(IEnumerable<AuctionCatalogItem> items)

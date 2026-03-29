@@ -32,7 +32,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         ChartBars = new ObservableCollection<ChartBarItem>();
 
         LoadCategories();
-        SelectedItem = Categories.SelectMany(x => x.Items).FirstOrDefault();
+        SelectedItem = GetFirstSelectableItem(Categories);
     }
 
     public ObservableCollection<AuctionCategoryGroup> Categories { get; }
@@ -125,6 +125,21 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     }
 
     [RelayCommand]
+    private void ToggleOrSelectItem(AuctionCatalogItem? item)
+    {
+        if (item is null)
+            return;
+
+        if (item.HasQualityVariants)
+        {
+            item.IsExpanded = !item.IsExpanded;
+            return;
+        }
+
+        SelectedItem = item;
+    }
+
+    [RelayCommand]
     private void SelectDay(DateTime? day)
     {
         if (day is null)
@@ -191,6 +206,13 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         {
             category.FilteredItems = new ObservableCollection<AuctionCatalogItem>(category.Items);
             category.IsExpanded = false;
+            foreach (var item in category.Items)
+            {
+                item.IsExpanded = false;
+                item.IsSelected = false;
+                foreach (var variant in item.QualityVariants)
+                    variant.IsSelected = false;
+            }
             category.PropertyChanged += (_, args) =>
             {
                 if (args.PropertyName == nameof(AuctionCategoryGroup.IsExpanded))
@@ -215,9 +237,12 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
             ApplyCategoryFilter();
 
             var candidate = !string.IsNullOrWhiteSpace(selectedId)
-                ? Categories.SelectMany(x => x.Items).FirstOrDefault(x => x.ItemId == selectedId)
+                ? Categories
+                    .SelectMany(x => x.Items)
+                    .SelectMany(GetSelectableItems)
+                    .FirstOrDefault(x => x.ItemId == selectedId)
                 : null;
-            SelectedItem = candidate ?? Categories.SelectMany(x => x.Items).FirstOrDefault();
+            SelectedItem = candidate ?? GetFirstSelectableItem(Categories);
         });
     }
 
@@ -240,8 +265,19 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         foreach (var category in _allCategories)
         {
             var filteredItems = hasSearch
-                ? category.Items.Where(x => x.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList()
+                ? category.Items.Where(x =>
+                        x.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                        category.CategoryName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                        x.QualityVariants.Any(v => v.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase)))
+                    .ToList()
                 : category.Items.ToList();
+
+            foreach (var item in filteredItems.Where(x => x.HasQualityVariants))
+            {
+                item.IsExpanded = hasSearch && (
+                    item.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    item.QualityVariants.Any(v => v.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase)));
+            }
 
             category.FilteredItems.Clear();
             foreach (var item in filteredItems)
@@ -330,11 +366,37 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         foreach (var category in _allCategories)
         {
             foreach (var item in category.Items)
-                item.IsSelected = SelectedItem is not null && item.ItemId == SelectedItem.ItemId;
+            {
+                if (item.HasQualityVariants)
+                {
+                    var selectedVariant = item.QualityVariants
+                        .FirstOrDefault(v => SelectedItem is not null && v.ItemId == SelectedItem.ItemId);
+                    item.IsSelected = selectedVariant is not null;
+                    if (selectedVariant is not null)
+                        item.IsExpanded = true;
+                    foreach (var variant in item.QualityVariants)
+                        variant.IsSelected = selectedVariant is not null && variant.ItemId == selectedVariant.ItemId;
+                }
+                else
+                {
+                    item.IsSelected = SelectedItem is not null && item.ItemId == SelectedItem.ItemId;
+                }
+            }
 
-            category.HasSelectedItem = category.Items.Any(x => x.IsSelected);
+            category.HasSelectedItem = category.Items.Any(x =>
+                x.IsSelected || x.QualityVariants.Any(v => v.IsSelected));
             category.ShowCollapsedSelectedIndicator = category.HasSelectedItem && !category.IsExpanded;
         }
+    }
+
+    private static IEnumerable<AuctionCatalogItem> GetSelectableItems(AuctionCatalogItem item)
+    {
+        return item.HasQualityVariants ? item.QualityVariants : new[] { item };
+    }
+
+    private static AuctionCatalogItem? GetFirstSelectableItem(IEnumerable<AuctionCategoryGroup> categories)
+    {
+        return categories.SelectMany(x => x.Items).SelectMany(GetSelectableItems).FirstOrDefault();
     }
 
     private void ReloadData()

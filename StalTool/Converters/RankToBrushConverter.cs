@@ -23,6 +23,12 @@ public sealed class RankToBrushConverter : IValueConverter
             "epic" => ("#FF6EC7", "#A84A84", "#331A2E"),
             "master" => ("#FF5C5C", "#B53A3A", "#381C1C"),
             "legendary" => ("#FFD45A", "#B08A2E", "#3A2F16"),
+            "artifact_common" => ("#C5C7CF", "#7A8094", "#222632"),
+            "artifact_uncommon" => ("#58D26A", "#2F8F49", "#1A2F20"),
+            "artifact_special" => ("#58A6FF", "#2F5FA8", "#1A213A"),
+            "artifact_rare" => ("#FF6EC7", "#A84A84", "#331A2E"),
+            "artifact_exceptional" => ("#FF5C5C", "#B53A3A", "#381C1C"),
+            "artifact_legendary" => ("#FFD45A", "#B08A2E", "#3A2F16"),
             _ => (null, null, null)
         };
 
