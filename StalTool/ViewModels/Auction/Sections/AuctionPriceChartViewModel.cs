@@ -16,6 +16,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 {
     private readonly AuctionService _auctionService;
     private readonly List<AuctionCategoryGroup> _allCategories = new();
+    private readonly List<PricePoint> _currentSales = new();
     private readonly Dictionary<string, ObservableCollection<PricePoint>> _priceBufferByItem = new();
     private readonly Dictionary<string, bool> _expansionBeforeSearch = new();
     private bool _isSearchMode;
@@ -30,7 +31,9 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         ActiveLots = new ObservableCollection<AuctionLot>();
         PriceHistory = new ObservableCollection<PricePoint>();
         ChartBars = new ObservableCollection<ChartBarItem>();
+        EnhancementFilters = new ObservableCollection<EnhancementFilterOption>();
 
+        BuildEnhancementFilters();
         LoadCategories();
         SelectedItem = GetFirstSelectableItem(Categories);
     }
@@ -41,6 +44,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     public ObservableCollection<AuctionLot> ActiveLots { get; }
     public ObservableCollection<PricePoint> PriceHistory { get; }
     public ObservableCollection<ChartBarItem> ChartBars { get; }
+    public ObservableCollection<EnhancementFilterOption> EnhancementFilters { get; }
 
     [ObservableProperty]
     private AuctionCatalogItem? _selectedItem;
@@ -53,6 +57,9 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
     [ObservableProperty]
     private bool _isCalendarOpen;
+
+    [ObservableProperty]
+    private bool _isEnhancementFilterOpen;
 
     [ObservableProperty]
     private PriceStats _stats = new();
@@ -69,8 +76,12 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     [ObservableProperty]
     private string _selectedAverageText = "Выберите столбцы для усреднения";
 
+    [ObservableProperty]
+    private EnhancementFilterOption? _selectedEnhancementFilter;
+
     public string SelectedItemName => SelectedItem?.DisplayName ?? "Предмет не выбран";
     public string SelectedDayText => SelectedDay?.ToString("dd.MM.yyyy") ?? "День не выбран";
+    public string SelectedEnhancementFilterText => SelectedEnhancementFilter?.Title ?? "Все заточки";
     public string MinPriceText => $"{Stats.MinPrice:N0} ₽";
     public string AvgPriceText => $"{Stats.AveragePrice:N0} ₽";
     public string MaxPriceText => $"{Stats.MaxPrice:N0} ₽";
@@ -105,6 +116,16 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     partial void OnSearchTextChanged(string value)
     {
         ApplyCategoryFilter();
+    }
+
+    partial void OnSelectedEnhancementFilterChanged(EnhancementFilterOption? value)
+    {
+        foreach (var filter in EnhancementFilters)
+            filter.IsSelected = filter == value;
+
+        OnPropertyChanged(nameof(SelectedEnhancementFilterText));
+        IsEnhancementFilterOpen = false;
+        ApplyEnhancementFilter();
     }
 
     partial void OnStatsChanged(PriceStats value)
@@ -163,6 +184,25 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     private void CloseCalendar()
     {
         IsCalendarOpen = false;
+    }
+
+    [RelayCommand]
+    private void ToggleEnhancementFilter()
+    {
+        IsEnhancementFilterOpen = !IsEnhancementFilterOpen;
+    }
+
+    [RelayCommand]
+    private void SelectEnhancementFilter(EnhancementFilterOption? filter)
+    {
+        if (filter is not null)
+            SelectedEnhancementFilter = filter;
+    }
+
+    [RelayCommand]
+    private void CloseEnhancementFilter()
+    {
+        IsEnhancementFilterOpen = false;
     }
 
     [RelayCommand]
@@ -399,38 +439,42 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         return categories.SelectMany(x => x.Items).SelectMany(GetSelectableItems).FirstOrDefault();
     }
 
+    private void BuildEnhancementFilters()
+    {
+        EnhancementFilters.Clear();
+        EnhancementFilters.Add(new EnhancementFilterOption
+        {
+            Title = "Все заточки",
+            Level = null,
+            IsSelected = true
+        });
+
+        for (int level = 0; level <= 15; level++)
+        {
+            EnhancementFilters.Add(new EnhancementFilterOption
+            {
+                Title = $"+{level}",
+                Level = level
+            });
+        }
+
+        SelectedEnhancementFilter = EnhancementFilters[0];
+    }
+
     private void ReloadData()
     {
         if (SelectedItem is null || SelectedDay is null)
             return;
 
         var selectedDate = SelectedDay.Value.Date;
-        var generatedSales = GenerateRandomSales(SelectedItem.ItemId, selectedDate);
-
-        PriceHistory.Clear();
-        foreach (var point in generatedSales)
-        {
-            PriceHistory.Add(point);
-        }
-        OnPropertyChanged(nameof(CurrentPriceText));
+        _currentSales.Clear();
+        _currentSales.AddRange(GenerateRandomSales(SelectedItem.ItemId, selectedDate));
 
         ActiveLots.Clear();
         foreach (var lot in _auctionService.GetMockActiveLots(SelectedItem))
             ActiveLots.Add(lot);
 
-        Stats = _auctionService.BuildStats(PriceHistory);
-        TrendDisplayText = Stats.ChangePercent >= 0
-            ? $"+{Stats.ChangePercent:0.##}%"
-            : $"{Stats.ChangePercent:0.##}%";
-
-        TrendBrush = Stats.ChangePercent switch
-        {
-            > 0 => new SolidColorBrush(Color.Parse("#44FF88")),
-            < 0 => new SolidColorBrush(Color.Parse("#FF5566")),
-            _ => new SolidColorBrush(Color.Parse("#A855F7"))
-        };
-
-        BuildChartBars(generatedSales);
+        ApplyEnhancementFilter();
     }
 
     private List<PricePoint> GenerateRandomSales(string itemId, DateTime selectedDate)
@@ -449,11 +493,41 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
             points.Add(new PricePoint
             {
                 Time = selectedDate.Date.AddMinutes(minute),
-                Value = value
+                Value = value,
+                EnhancementLevel = random.Next(0, 16)
             });
         }
 
         return points.OrderBy(x => x.Time).ToList();
+    }
+
+    private void ApplyEnhancementFilter()
+    {
+        var enhancementLevel = SelectedEnhancementFilter?.Level;
+        var filteredSales = enhancementLevel.HasValue
+            ? _currentSales.Where(x => x.EnhancementLevel == enhancementLevel.Value).ToList()
+            : _currentSales.ToList();
+
+        PriceHistory.Clear();
+        foreach (var point in filteredSales)
+            PriceHistory.Add(point);
+        OnPropertyChanged(nameof(CurrentPriceText));
+
+        Stats = _auctionService.BuildStats(filteredSales);
+        TrendDisplayText = Stats.ChangePercent >= 0
+            ? $"+{Stats.ChangePercent:0.##}%"
+            : $"{Stats.ChangePercent:0.##}%";
+
+        TrendBrush = Stats.ChangePercent switch
+        {
+            > 0 => new SolidColorBrush(Color.Parse("#44FF88")),
+            < 0 => new SolidColorBrush(Color.Parse("#FF5566")),
+            _ => new SolidColorBrush(Color.Parse("#A855F7"))
+        };
+
+        BuildChartBars(filteredSales);
+        if (filteredSales.Count == 0 && enhancementLevel.HasValue)
+            SelectedSaleText = $"Нет продаж для заточки +{enhancementLevel.Value}";
     }
 
     private void BuildChartBars(IReadOnlyList<PricePoint> sales)
@@ -466,19 +540,22 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
             return;
 
         var max = sales.Max(x => x.Value);
-        if (max <= 0)
-            max = 1;
+        var min = sales.Min(x => x.Value);
+        if (max <= min)
+            max = min + 1;
 
         foreach (var sale in sales)
         {
-            var normalized = sale.Value / max;
-            var height = 20 + (normalized * 240);
+            var normalized = (sale.Value - min) / (double)(max - min);
+            var emphasized = Math.Pow(normalized, 0.7);
+            var height = 40 + (emphasized * 212);
             ChartBars.Add(new ChartBarItem
             {
                 Time = sale.Time,
                 Value = sale.Value,
                 Label = sale.Time.ToString("HH:mm"),
                 ValueText = $"{sale.Value:N0} ₽",
+                EnhancementText = $"+{sale.EnhancementLevel}",
                 Height = height,
                 IsSelected = false,
                 Fill = CreateBarBrush(normalized, isSelected: false)
@@ -505,12 +582,13 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
             return;
 
         var max = ChartBars.Max(x => x.Value);
-        if (max <= 0)
-            max = 1;
+        var min = ChartBars.Min(x => x.Value);
+        if (max <= min)
+            max = min + 1;
 
         foreach (var bar in ChartBars)
         {
-            var normalized = bar.Value / max;
+            var normalized = (bar.Value - min) / (max - min);
             bar.Fill = CreateBarBrush(normalized, bar.IsSelected);
         }
     }
@@ -533,6 +611,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         public double Value { get; set; }
         public string Label { get; set; } = string.Empty;
         public string ValueText { get; set; } = string.Empty;
+        public string EnhancementText { get; set; } = string.Empty;
         public double Height { get; set; }
 
         [ObservableProperty]
@@ -540,6 +619,15 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
         [ObservableProperty]
         private IBrush _fill = Brushes.Transparent;
+    }
+
+    public partial class EnhancementFilterOption : ObservableObject
+    {
+        public string Title { get; set; } = string.Empty;
+        public int? Level { get; set; }
+
+        [ObservableProperty]
+        private bool _isSelected;
     }
 
     public partial class CalendarDayCell : ObservableObject

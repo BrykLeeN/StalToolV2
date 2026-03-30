@@ -210,58 +210,116 @@
                 Padding="18">
             <Grid RowDefinitions="Auto,*,Auto"
                   RowSpacing="8">
-                <StackPanel Grid.Row="0"
-                            Spacing="2"
-                            HorizontalAlignment="Left">
-                    <TextBlock Text="История цены"
-                               Foreground="{DynamicResource BrushTextSecondary}"
-                               FontSize="14"
-                               HorizontalAlignment="Left"/>
-                    <TextBlock Text="{Binding SelectedItemName}"
-                               Foreground="{DynamicResource BrushTextPrimary}"
-                               FontSize="38"
-                               FontWeight="Bold"
-                               HorizontalAlignment="Left"/>
-                </StackPanel>
+                <Grid Grid.Row="0"
+                      ColumnDefinitions="*,Auto"
+                      ColumnSpacing="12">
+                    <StackPanel Spacing="2"
+                                HorizontalAlignment="Left">
+                        <TextBlock Text="История цены"
+                                   Foreground="{DynamicResource BrushTextSecondary}"
+                                   FontSize="14"
+                                   HorizontalAlignment="Left"/>
+                        <TextBlock Text="{Binding SelectedItemName}"
+                                   Foreground="{DynamicResource BrushTextPrimary}"
+                                   FontSize="38"
+                                   FontWeight="Bold"
+                                   HorizontalAlignment="Left"/>
+                    </StackPanel>
+                    <Grid Grid.Column="1"
+                          VerticalAlignment="Center">
+                        <Button x:Name="EnhancementFilterButton"
+                                Classes="AuctionCalendarTrigger"
+                                Content="{Binding SelectedEnhancementFilterText}"
+                                Command="{Binding ToggleEnhancementFilterCommand}"
+                                MinWidth="132"
+                                HorizontalAlignment="Right"/>
+                        <Popup IsOpen="{Binding IsEnhancementFilterOpen, Mode=TwoWay}"
+                               IsLightDismissEnabled="True"
+                               OverlayDismissEventPassThrough="True"
+                               ShouldUseOverlayLayer="True"
+                               Topmost="True"
+                               Placement="BottomEdgeAlignedRight"
+                               PlacementTarget="{Binding #EnhancementFilterButton}">
+                            <Border Classes="AuctionCalendarPanel"
+                                    MinWidth="132">
+                                <StackPanel Spacing="4">
+                                    <ItemsControl ItemsSource="{Binding EnhancementFilters}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Button Classes="AuctionDayCell"
+                                                        Classes.SelectedDayCell="{Binding IsSelected}"
+                                                        Content="{Binding Title}"
+                                                        Command="{ReflectionBinding DataContext.SelectEnhancementFilterCommand, ElementName=Root}"
+                                                        CommandParameter="{Binding .}"
+                                                        HorizontalContentAlignment="Center"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </Grid>
 
-                <ItemsControl Grid.Row="1"
-                              ItemsSource="{Binding ChartBars}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Rows="1"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Spacing="4"
-                                        VerticalAlignment="Bottom">
-                                <Button Background="Transparent"
-                                        BorderThickness="0"
-                                        Padding="0"
-                                        Command="{ReflectionBinding DataContext.ToggleChartBarSelectionCommand, ElementName=Root}"
-                                        CommandParameter="{Binding .}">
-                                    <ToolTip.Tip>
-                                        <TextBlock Text="{Binding ValueText}"/>
-                                    </ToolTip.Tip>
-                                    <Grid Height="270"
-                                          Width="20"
-                                          VerticalAlignment="Bottom">
-                                        <Border Width="16"
-                                                Height="{Binding Height}"
-                                                Background="{Binding Fill}"
-                                                CornerRadius="10,10,4,4"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Bottom"/>
-                                    </Grid>
-                                </Button>
-                                <TextBlock Text="{Binding Label}"
-                                           HorizontalAlignment="Center"
-                                           Foreground="{DynamicResource BrushTextMuted}"
-                                           FontSize="10"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <Border Grid.Row="1"
+                        Background="#0A090F"
+                        BorderBrush="#251A3E"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        Padding="10,8,10,8">
+                    <Grid>
+                        <ScrollViewer VerticalScrollBarVisibility="Disabled"
+                                      HorizontalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding ChartBars}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"
+                                                    Spacing="6"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid RowDefinitions="Auto,252,Auto"
+                                              RowSpacing="3"
+                                              Width="26"
+                                              VerticalAlignment="Bottom">
+                                            <TextBlock Grid.Row="0"
+                                                       Text="{Binding EnhancementText}"
+                                                       HorizontalAlignment="Center"
+                                                       Foreground="#B8ADDE"
+                                                       FontSize="10"
+                                                       FontWeight="SemiBold"/>
+                                            <Button Grid.Row="1"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    Padding="0"
+                                                    Command="{ReflectionBinding DataContext.ToggleChartBarSelectionCommand, ElementName=Root}"
+                                                    CommandParameter="{Binding .}">
+                                                <ToolTip.Tip>
+                                                    <TextBlock Text="{Binding ValueText}"/>
+                                                </ToolTip.Tip>
+                                                <Grid Height="252"
+                                                      Width="22">
+                                                    <Border Width="18"
+                                                            Height="{Binding Height}"
+                                                            Background="{Binding Fill}"
+                                                            CornerRadius="10,10,4,4"
+                                                            HorizontalAlignment="Center"
+                                                            VerticalAlignment="Bottom"/>
+                                                </Grid>
+                                            </Button>
+                                            <TextBlock Grid.Row="2"
+                                                       Text="{Binding Label}"
+                                                       HorizontalAlignment="Center"
+                                                       Foreground="{DynamicResource BrushTextMuted}"
+                                                       FontSize="10"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
 
                 <Grid Grid.Row="2"
                       ColumnDefinitions="*,Auto"
@@ -372,7 +430,8 @@
                                        FontSize="12"/>
                             <TextBlock Text="{Binding CurrentPriceText}"
                                        Foreground="#FFFFFF"
-                                       FontSize="20"
+                                       FontSize="18"
+                                       TextWrapping="Wrap"
                                        FontWeight="SemiBold"/>
                         </StackPanel>
                     </Border>
@@ -390,7 +449,8 @@
                                        FontSize="12"/>
                             <TextBlock Text="{Binding MinPriceText}"
                                        Foreground="#FFFFFF"
-                                       FontSize="20"
+                                       FontSize="18"
+                                       TextWrapping="Wrap"
                                        FontWeight="SemiBold"/>
                         </StackPanel>
                     </Border>
@@ -408,7 +468,8 @@
                                        FontSize="12"/>
                             <TextBlock Text="{Binding AvgPriceText}"
                                        Foreground="#FFFFFF"
-                                       FontSize="20"
+                                       FontSize="18"
+                                       TextWrapping="Wrap"
                                        FontWeight="SemiBold"/>
                         </StackPanel>
                     </Border>
@@ -430,7 +491,8 @@
                                        FontSize="12"/>
                             <TextBlock Text="{Binding MaxPriceText}"
                                        Foreground="#FFFFFF"
-                                       FontSize="20"
+                                       FontSize="18"
+                                       TextWrapping="Wrap"
                                        FontWeight="SemiBold"/>
                         </StackPanel>
                     </Border>
