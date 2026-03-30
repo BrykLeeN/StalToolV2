@@ -111,10 +111,9 @@ public class AuctionService
         _cacheErrorLogFile = Path.Combine(_cacheDir, "github_sync_error.log");
     }
 
-    public ObservableCollection<AuctionCategoryGroup> GetCategoriesFromCacheOrMock()
+    public ObservableCollection<AuctionCategoryGroup> GetCachedCategories()
     {
-        var cached = LoadCategoriesFromCache();
-        return cached.Count > 0 ? cached : GetMockCategories();
+        return LoadCategoriesFromCache();
     }
 
     public async Task<ObservableCollection<AuctionCategoryGroup>> RefreshCategoriesFromGitHubAsync(CancellationToken cancellationToken = default)
@@ -182,41 +181,6 @@ public class AuctionService
             TryWriteSyncError(ex);
             return new ObservableCollection<AuctionCategoryGroup>();
         }
-    }
-
-    public ObservableCollection<AuctionCategoryGroup> GetMockCategories()
-    {
-        return new ObservableCollection<AuctionCategoryGroup>
-        {
-            new()
-            {
-                CategoryName = "Оружие",
-                Items = new ObservableCollection<AuctionCatalogItem>
-                {
-                    new() { ItemId = "ak74m", DisplayName = "АК-74М", Category = "Оружие", Rank = "epic", IconPath = DefaultIcon },
-                    new() { ItemId = "svds", DisplayName = "СВДС", Category = "Оружие", Rank = "legendary", IconPath = DefaultIcon },
-                    new() { ItemId = "ash12", DisplayName = "АШ-12", Category = "Оружие", Rank = "master", IconPath = DefaultIcon }
-                }
-            },
-            new()
-            {
-                CategoryName = "Контейнеры",
-                Items = new ObservableCollection<AuctionCatalogItem>
-                {
-                    new() { ItemId = "striker_case", DisplayName = "Ящик «Страйкер»", Category = "Контейнеры", Rank = "rare", IconPath = DefaultIcon },
-                    new() { ItemId = "supply_box", DisplayName = "Снабженческий контейнер", Category = "Контейнеры", Rank = "common", IconPath = DefaultIcon }
-                }
-            },
-            new()
-            {
-                CategoryName = "Броня",
-                Items = new ObservableCollection<AuctionCatalogItem>
-                {
-                    new() { ItemId = "saturn", DisplayName = "Сатурн", Category = "Броня", Rank = "master", IconPath = DefaultIcon },
-                    new() { ItemId = "skat9", DisplayName = "СКАТ-9", Category = "Броня", Rank = "epic", IconPath = DefaultIcon }
-                }
-            }
-        };
     }
 
     public ObservableCollection<PricePoint> GetMockPriceBuffer(string itemId)

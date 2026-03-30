@@ -233,7 +233,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
     private void LoadCategories()
     {
-        LoadCategoriesInternal(_auctionService.GetCategoriesFromCacheOrMock());
+        LoadCategoriesInternal(_auctionService.GetCachedCategories());
         _ = RefreshCategoriesFromGitHubAsync();
     }
 
