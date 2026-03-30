@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Media;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StalTool.Models;
 using StalTool.Services;
-using System.Threading.Tasks;
 
 namespace StalTool.ViewModels.Auction.Sections;
 
 public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 {
     private readonly AuctionService _auctionService;
+    private readonly CatalogService _catalogService;
     private readonly List<AuctionCategoryGroup> _allCategories = new();
     private readonly List<PricePoint> _currentSales = new();
     private readonly Dictionary<string, ObservableCollection<PricePoint>> _priceBufferByItem = new();
@@ -24,6 +23,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     public AuctionPriceChartViewModel()
     {
         _auctionService = new AuctionService();
+        _catalogService = new CatalogService();
 
         Categories = new ObservableCollection<AuctionCategoryGroup>();
         AvailableDays = new ObservableCollection<DateTime>();
@@ -233,8 +233,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
     private void LoadCategories()
     {
-        LoadCategoriesInternal(_auctionService.GetCachedCategories());
-        _ = RefreshCategoriesFromGitHubAsync();
+        LoadCategoriesInternal(_catalogService.GetCachedCategories());
     }
 
     private void LoadCategoriesInternal(IEnumerable<AuctionCategoryGroup> groups)
@@ -262,28 +261,6 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
             _allCategories.Add(category);
             Categories.Add(category);
         }
-    }
-
-    private async Task RefreshCategoriesFromGitHubAsync()
-    {
-        var remote = await _auctionService.RefreshCategoriesFromGitHubAsync();
-        if (remote.Count == 0)
-            return;
-
-        var selectedId = SelectedItem?.ItemId;
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            LoadCategoriesInternal(remote);
-            ApplyCategoryFilter();
-
-            var candidate = !string.IsNullOrWhiteSpace(selectedId)
-                ? Categories
-                    .SelectMany(x => x.Items)
-                    .SelectMany(GetSelectableItems)
-                    .FirstOrDefault(x => x.ItemId == selectedId)
-                : null;
-            SelectedItem = candidate ?? GetFirstSelectableItem(Categories);
-        });
     }
 
     private void ApplyCategoryFilter()

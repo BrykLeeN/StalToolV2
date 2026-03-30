@@ -1,0 +1,90 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StalTool.ViewModels"
+        x:Class="StalTool.Views.StartupUpdateWindow"
+        x:DataType="vm:StartupUpdateViewModel"
+        Width="760"
+        Height="470"
+        MinWidth="720"
+        MinHeight="440"
+        CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Title="StalTool | Обновление">
+    <Border CornerRadius="16"
+            Background="#CC0D0D12"
+            BorderBrush="{StaticResource BrushBorder}"
+            BorderThickness="1"
+            Padding="20">
+        <Grid RowDefinitions="Auto,Auto,Auto,*">
+            <StackPanel Spacing="6">
+                <TextBlock Text="Обновление данных"
+                           FontSize="28"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource BrushTextPrimary}"/>
+                <TextBlock Text="Подготовка локального каталога предметов"
+                           FontSize="14"
+                           Foreground="{StaticResource BrushTextSecondary}"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="1"
+                        Margin="0,18,0,0"
+                        Spacing="8">
+                <TextBlock Text="{Binding StageText}"
+                           FontSize="16"
+                           Foreground="{StaticResource BrushTextPrimary}"/>
+                <ProgressBar Minimum="0"
+                             Maximum="100"
+                             Value="{Binding ProgressPercent}"
+                             Background="#1A142B"
+                             Foreground="#9B59FF"
+                             BorderBrush="#6A3FD5"
+                             BorderThickness="1"
+                             Height="16"/>
+                <TextBlock Text="{Binding CurrentFileDisplayText}"
+                           IsVisible="{Binding HasCurrentFileText}"
+                           Foreground="{StaticResource BrushTextSecondary}"
+                           FontSize="12"/>
+            </StackPanel>
+
+            <Border Grid.Row="2"
+                    Margin="0,14,0,10"
+                    Background="#2A111B"
+                    CornerRadius="10"
+                    Padding="10"
+                    IsVisible="{Binding HasError}">
+                <TextBlock Text="{Binding ErrorText}"
+                           Foreground="{StaticResource BrushLoss}"
+                           FontSize="12"/>
+            </Border>
+
+            <Border Grid.Row="3"
+                    Margin="0,10,0,0"
+                    BorderBrush="#6A3FD5"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Background="#14111E"
+                    Padding="10">
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Установленные файлы"
+                               Foreground="{StaticResource BrushTextPrimary}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,8"/>
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding InstalledFiles}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding .}"
+                                               Foreground="{StaticResource BrushTextSecondary}"
+                                               FontSize="12"
+                                               Margin="0,0,0,4"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
