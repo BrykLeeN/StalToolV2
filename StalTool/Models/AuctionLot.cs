@@ -19,4 +19,5 @@ public class AuctionLot
     public DateTime EndTime { get; set; }
 
     public string PriceStatus { get; set; } = "Норма";
+    public bool ShowAmountBadge { get; set; } = true;
 }

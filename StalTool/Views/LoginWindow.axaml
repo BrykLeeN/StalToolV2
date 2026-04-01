@@ -6,9 +6,19 @@
         Width="760"
         Height="500"
         CanResize="False"
+        Background="Transparent"
+        TransparencyLevelHint="AcrylicBlur"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1"
+        SystemDecorations="Full"
         WindowStartupLocation="CenterScreen"
         Title="StalTool | Вход">
-    <Border Background="#CC0D0D12">
+    <Border Background="#CC0D0D12"
+            CornerRadius="16"
+            ClipToBounds="True"
+            BorderBrush="{StaticResource BrushBorder}"
+            BorderThickness="1">
         <Grid>
             <Ellipse Width="500"
                      Height="500"

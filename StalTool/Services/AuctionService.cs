@@ -47,9 +47,18 @@ public class AuctionService
     {
         var itemId = item.ItemId;
         var itemName = item.DisplayName;
+        var isArtifact = string.Equals(item.Category, "Артефакты", StringComparison.OrdinalIgnoreCase);
+        var isModule = string.Equals(item.Category, "Модули", StringComparison.OrdinalIgnoreCase);
+        var isArmor = string.Equals(item.Category, "Броня", StringComparison.OrdinalIgnoreCase);
+        var isWeapon = string.Equals(item.Category, "Оружие", StringComparison.OrdinalIgnoreCase);
+        var hideAmountBadge = isModule || isArmor || isWeapon;
         var seed = Math.Abs(itemId.GetHashCode(StringComparison.Ordinal));
         var basePrice = 1300 + (seed % 47000);
         var delta = Math.Max(35, basePrice * 0.018);
+
+        var amount1 = isModule ? 1 : (isArtifact ? 1 : 2 + (seed % 4));
+        var amount2 = isModule ? 1 : (isArtifact ? 1 : 1 + ((seed / 3) % 5));
+        var amount3 = isModule ? 1 : (isArtifact ? 1 : 1 + ((seed / 7) % 3));
 
         return new ObservableCollection<AuctionLot>
         {
@@ -60,13 +69,14 @@ public class AuctionService
                 IconPath = string.IsNullOrWhiteSpace(item.IconPath) ? DefaultIcon : item.IconPath,
                 Category = item.Category,
                 Rank = item.Rank,
-                Amount = 1,
+                Amount = amount1,
                 StartPrice = (long)Math.Round(basePrice - (delta * 0.9), 0),
                 CurrentPrice = (long)Math.Round(basePrice - (delta * 0.4), 0),
                 BuyoutPrice = (long)Math.Round(basePrice + (delta * 0.2), 0),
                 StartTime = DateTime.Now.AddHours(-8),
                 EndTime = DateTime.Now.AddHours(10),
-                PriceStatus = "Низкая"
+                PriceStatus = "Низкая",
+                ShowAmountBadge = !hideAmountBadge && amount1 > 1
             },
             new()
             {
@@ -75,13 +85,14 @@ public class AuctionService
                 IconPath = string.IsNullOrWhiteSpace(item.IconPath) ? DefaultIcon : item.IconPath,
                 Category = item.Category,
                 Rank = item.Rank,
-                Amount = 1,
+                Amount = amount2,
                 StartPrice = (long)Math.Round(basePrice - (delta * 0.2), 0),
                 CurrentPrice = (long)Math.Round(basePrice + (delta * 0.1), 0),
                 BuyoutPrice = (long)Math.Round(basePrice + (delta * 0.45), 0),
                 StartTime = DateTime.Now.AddHours(-4),
                 EndTime = DateTime.Now.AddHours(15),
-                PriceStatus = "Норма"
+                PriceStatus = "Норма",
+                ShowAmountBadge = !hideAmountBadge && amount2 > 1
             },
             new()
             {
@@ -90,13 +101,14 @@ public class AuctionService
                 IconPath = string.IsNullOrWhiteSpace(item.IconPath) ? DefaultIcon : item.IconPath,
                 Category = item.Category,
                 Rank = item.Rank,
-                Amount = 1,
+                Amount = amount3,
                 StartPrice = (long)Math.Round(basePrice + (delta * 0.55), 0),
                 CurrentPrice = (long)Math.Round(basePrice + (delta * 0.9), 0),
                 BuyoutPrice = (long)Math.Round(basePrice + (delta * 1.25), 0),
                 StartTime = DateTime.Now.AddHours(-1),
                 EndTime = DateTime.Now.AddHours(22),
-                PriceStatus = "Высокая"
+                PriceStatus = "Высокая",
+                ShowAmountBadge = !hideAmountBadge && amount3 > 1
             }
         };
     }

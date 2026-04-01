@@ -284,7 +284,8 @@
                                               Width="26"
                                               VerticalAlignment="Bottom">
                                             <TextBlock Grid.Row="0"
-                                                       Text="{Binding EnhancementText}"
+                                                       Text="{Binding BarMetaText}"
+                                                       IsVisible="{Binding HasMetaText}"
                                                        HorizontalAlignment="Center"
                                                        Foreground="#B8ADDE"
                                                        FontSize="10"
@@ -566,10 +567,26 @@
                                                 BorderBrush="#5A3D99"
                                                 BorderThickness="1"
                                                 ClipToBounds="True">
-                                            <Image Source="{Binding IconPath, Converter={StaticResource IconPathToBitmapConverter}}"
-                                                   Stretch="UniformToFill"
-                                                   Width="48"
-                                                   Height="48"/>
+                                            <Grid>
+                                                <Image Source="{Binding IconPath, Converter={StaticResource IconPathToBitmapConverter}}"
+                                                       Stretch="UniformToFill"
+                                                       Width="48"
+                                                       Height="48"/>
+                                                <Border HorizontalAlignment="Right"
+                                                        VerticalAlignment="Bottom"
+                                                        Margin="0,0,2,2"
+                                                        IsVisible="{Binding ShowAmountBadge}"
+                                                        Background="#CC11111A"
+                                                        BorderBrush="#8B6BCA"
+                                                        BorderThickness="1"
+                                                        CornerRadius="8"
+                                                        Padding="4,1">
+                                                    <TextBlock Text="{Binding Amount}"
+                                                               Foreground="#F5F2FF"
+                                                               FontSize="10"
+                                                               FontWeight="Bold"/>
+                                                </Border>
+                                            </Grid>
                                         </Border>
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding DisplayName}"

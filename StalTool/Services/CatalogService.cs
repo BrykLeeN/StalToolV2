@@ -102,6 +102,7 @@ public class CatalogService
     private readonly string _cacheIconsDir;
     private readonly string _cacheRepoZipFile;
     private readonly string _cacheErrorLogFile;
+    private readonly string _cacheSyncStateFile;
 
     public CatalogService()
     {
@@ -111,6 +112,7 @@ public class CatalogService
         _cacheIconsDir = Path.Combine(_cacheDir, "icons");
         _cacheRepoZipFile = Path.Combine(_cacheDir, "repo_snapshot.zip");
         _cacheErrorLogFile = Path.Combine(_cacheDir, "github_sync_error.log");
+        _cacheSyncStateFile = Path.Combine(_cacheDir, "catalog_sync_state.json");
     }
 
     public ObservableCollection<AuctionCategoryGroup> GetCachedCategories()
@@ -118,9 +120,75 @@ public class CatalogService
         return LoadCategoriesFromCache();
     }
 
-    public async Task<ObservableCollection<AuctionCategoryGroup>> RefreshCategoriesFromGitHubAsync(
+    public async Task<ObservableCollection<AuctionCategoryGroup>> RefreshCategoriesOnScheduleAsync(
         IProgress<CatalogSyncProgress>? progress = null,
         CancellationToken cancellationToken = default)
+    {
+        var now = DateTimeOffset.Now;
+        var scheduleState = LoadSyncState();
+        var cached = LoadCategoriesFromCache();
+        var hasValidCache = HasValidLocalCatalogFolder() && cached.Count > 0;
+        var hasDueSlot = TryGetLatestDueScheduleSlot(now, out var latestDueSlot);
+
+        if (!hasValidCache)
+        {
+            progress?.Report(new CatalogSyncProgress(8, "Установка каталога", "Первичный запуск"));
+            var installed = await RefreshCategoriesFromGitHubAsync(progress, cancellationToken, forceReinstall: true);
+            var effective = installed.Count > 0 ? installed : LoadCategoriesFromCache();
+
+            if (effective.Count > 0)
+            {
+                scheduleState.LastSuccessfulSyncUtc = DateTimeOffset.UtcNow;
+                if (hasDueSlot)
+                    scheduleState.LastCheckedScheduledSlotUtc = latestDueSlot.ToUniversalTime();
+                scheduleState.LastRemoteCommitSha = await TryGetRemoteHeadCommitShaAsync(cancellationToken);
+                SaveSyncState(scheduleState);
+            }
+
+            return effective;
+        }
+
+        if (!hasDueSlot || IsSlotAlreadyChecked(scheduleState, latestDueSlot))
+        {
+            progress?.Report(new CatalogSyncProgress(100, "Локальный каталог актуален", "Переустановка не требуется"));
+            return cached;
+        }
+
+        progress?.Report(new CatalogSyncProgress(10, "Идет проверка обновлений, подождите", "Проверка GitHub"));
+        var remoteSha = await TryGetRemoteHeadCommitShaAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(remoteSha))
+        {
+            progress?.Report(new CatalogSyncProgress(100, "Проверка GitHub недоступна", "Повтор при следующем запуске"));
+            return cached;
+        }
+
+        if (string.Equals(scheduleState.LastRemoteCommitSha, remoteSha, StringComparison.OrdinalIgnoreCase))
+        {
+            scheduleState.LastCheckedScheduledSlotUtc = latestDueSlot.ToUniversalTime();
+            SaveSyncState(scheduleState);
+            progress?.Report(new CatalogSyncProgress(100, "Обновлений не найдено", "Локальный каталог актуален"));
+            return cached;
+        }
+
+        progress?.Report(new CatalogSyncProgress(14, "Начинается обновление, подождите", "Подготовка загрузки"));
+        var refreshed = await RefreshCategoriesFromGitHubAsync(progress, cancellationToken, forceReinstall: true);
+        var refreshedEffective = refreshed.Count > 0 ? refreshed : LoadCategoriesFromCache();
+
+        if (refreshedEffective.Count > 0)
+        {
+            scheduleState.LastRemoteCommitSha = remoteSha;
+            scheduleState.LastCheckedScheduledSlotUtc = latestDueSlot.ToUniversalTime();
+            scheduleState.LastSuccessfulSyncUtc = DateTimeOffset.UtcNow;
+            SaveSyncState(scheduleState);
+        }
+
+        return refreshedEffective;
+    }
+
+    public async Task<ObservableCollection<AuctionCategoryGroup>> RefreshCategoriesFromGitHubAsync(
+        IProgress<CatalogSyncProgress>? progress = null,
+        CancellationToken cancellationToken = default,
+        bool forceReinstall = false)
     {
         try
         {
@@ -130,13 +198,13 @@ public class CatalogService
             var cached = LoadCategoriesFromCache();
             var missingIconIds = GetMissingOrCorruptedIconIds(cachedRawItems);
 
-            if (cachedRawItems.Count > 0 && cached.Count > 0 && missingIconIds.Count == 0)
+            if (!forceReinstall && cachedRawItems.Count > 0 && cached.Count > 0 && missingIconIds.Count == 0)
             {
                 progress?.Report(new CatalogSyncProgress(100, "Локальный каталог актуален", "Переустановка не требуется"));
                 return cached;
             }
 
-            if (cachedRawItems.Count > 0 && cached.Count > 0 && missingIconIds.Count > 0)
+            if (!forceReinstall && cachedRawItems.Count > 0 && cached.Count > 0 && missingIconIds.Count > 0)
             {
                 progress?.Report(new CatalogSyncProgress(10, "Восстановление каталога", $"{missingIconIds.Count} файлов"));
                 await RepairMissingIconsAsync(missingIconIds, cachedRawItems, progress, cancellationToken);
@@ -228,7 +296,7 @@ public class CatalogService
         {
             TryWriteSyncError(ex);
             progress?.Report(new CatalogSyncProgress(100, "Ошибка обновления каталога", ex.Message, true));
-            return new ObservableCollection<AuctionCategoryGroup>();
+            return LoadCategoriesFromCache();
         }
         finally
         {
@@ -899,6 +967,96 @@ public class CatalogService
         return hasAnyIcon;
     }
 
+    private async Task<string?> TryGetRemoteHeadCommitShaAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            var url = $"https://api.github.com/repos/{_githubOwner}/{_githubRepo}/branches/{Uri.EscapeDataString(_githubBranch)}";
+            var json = await Http.GetStringAsync(url, cancellationToken);
+            var root = JsonNode.Parse(json);
+            return root?["commit"]?["sha"]?.GetValue<string>()?.Trim();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private CatalogSyncState LoadSyncState()
+    {
+        try
+        {
+            if (!File.Exists(_cacheSyncStateFile))
+                return new CatalogSyncState();
+
+            var json = File.ReadAllText(_cacheSyncStateFile, Encoding.UTF8);
+            return JsonSerializer.Deserialize<CatalogSyncState>(json) ?? new CatalogSyncState();
+        }
+        catch
+        {
+            return new CatalogSyncState();
+        }
+    }
+
+    private void SaveSyncState(CatalogSyncState state)
+    {
+        Directory.CreateDirectory(_cacheDir);
+        var json = JsonSerializer.Serialize(state, JsonOptions);
+        File.WriteAllText(_cacheSyncStateFile, json, Encoding.UTF8);
+    }
+
+    private static bool IsSlotAlreadyChecked(CatalogSyncState state, DateTimeOffset dueSlotLocal)
+    {
+        if (!state.LastCheckedScheduledSlotUtc.HasValue)
+            return false;
+
+        return state.LastCheckedScheduledSlotUtc.Value >= dueSlotLocal.ToUniversalTime();
+    }
+
+    private static bool TryGetLatestDueScheduleSlot(DateTimeOffset nowLocal, out DateTimeOffset dueSlotLocal)
+    {
+        dueSlotLocal = default;
+        var latest = DateTimeOffset.MinValue;
+        var hasValue = false;
+        var startOfWeek = GetWeekStartMonday(nowLocal.Date);
+
+        for (var weekOffset = -2; weekOffset <= 0; weekOffset++)
+        {
+            var weekStart = startOfWeek.AddDays(7 * weekOffset);
+            var wednesday = weekStart.AddDays(2);
+
+            var noon = new DateTimeOffset(new DateTime(
+                wednesday.Year, wednesday.Month, wednesday.Day, 12, 0, 0, DateTimeKind.Local));
+            var evening = new DateTimeOffset(new DateTime(
+                wednesday.Year, wednesday.Month, wednesday.Day, 20, 0, 0, DateTimeKind.Local));
+
+            if (noon <= nowLocal && (!hasValue || noon > latest))
+            {
+                latest = noon;
+                hasValue = true;
+            }
+
+            if (evening <= nowLocal && (!hasValue || evening > latest))
+            {
+                latest = evening;
+                hasValue = true;
+            }
+        }
+
+        if (!hasValue)
+            return false;
+
+        dueSlotLocal = latest;
+        return true;
+    }
+
+    private static DateTime GetWeekStartMonday(DateTime date)
+    {
+        var dayOfWeek = (int)date.DayOfWeek;
+        var shift = (dayOfWeek + 6) % 7;
+        return date.Date.AddDays(-shift);
+    }
+
     private static string GetAppCacheRootDirectory()
     {
         var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -953,5 +1111,12 @@ public class CatalogService
         public string? Category { get; set; }
         public string? Rank { get; set; }
         public string? IconPath { get; set; }
+    }
+
+    private sealed class CatalogSyncState
+    {
+        public DateTimeOffset? LastCheckedScheduledSlotUtc { get; set; }
+        public DateTimeOffset? LastSuccessfulSyncUtc { get; set; }
+        public string? LastRemoteCommitSha { get; set; }
     }
 }

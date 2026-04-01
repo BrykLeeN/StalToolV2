@@ -456,6 +456,8 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
     private List<PricePoint> GenerateRandomSales(string itemId, DateTime selectedDate)
     {
+        var isArtifact = SelectedItem is not null &&
+                         string.Equals(SelectedItem.Category, "Артефакты", StringComparison.OrdinalIgnoreCase);
         var seed = HashCode.Combine(itemId.ToLowerInvariant(), selectedDate.Date);
         var random = new Random(seed);
         var count = random.Next(16, 34);
@@ -471,6 +473,7 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
             {
                 Time = selectedDate.Date.AddMinutes(minute),
                 Value = value,
+                Amount = isArtifact ? 1 : random.Next(1, 9),
                 EnhancementLevel = random.Next(0, 16)
             });
         }
@@ -521,18 +524,28 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         if (max <= min)
             max = min + 1;
 
+        var metaMode = GetChartMetaMode();
         foreach (var sale in sales)
         {
             var normalized = (sale.Value - min) / (double)(max - min);
             var emphasized = Math.Pow(normalized, 0.7);
             var height = 40 + (emphasized * 212);
+
+            var metaText = metaMode switch
+            {
+                ChartMetaMode.Enhancement => $"+{sale.EnhancementLevel}",
+                ChartMetaMode.Amount => $"x{sale.Amount}",
+                _ => string.Empty
+            };
+
             ChartBars.Add(new ChartBarItem
             {
                 Time = sale.Time,
                 Value = sale.Value,
                 Label = sale.Time.ToString("HH:mm"),
                 ValueText = $"{sale.Value:N0} ₽",
-                EnhancementText = $"+{sale.EnhancementLevel}",
+                BarMetaText = metaText,
+                HasMetaText = !string.IsNullOrWhiteSpace(metaText),
                 Height = height,
                 IsSelected = false,
                 Fill = CreateBarBrush(normalized, isSelected: false)
@@ -582,13 +595,32 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         return new SolidColorBrush(Color.Parse("#7C3AED"));
     }
 
+    private ChartMetaMode GetChartMetaMode()
+    {
+        if (SelectedItem is null)
+            return ChartMetaMode.Amount;
+
+        if (string.Equals(SelectedItem.Category, "Модули", StringComparison.OrdinalIgnoreCase))
+            return ChartMetaMode.None;
+
+        if (string.Equals(SelectedItem.Category, "Артефакты", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(SelectedItem.Category, "Броня", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(SelectedItem.Category, "Оружие", StringComparison.OrdinalIgnoreCase))
+        {
+            return ChartMetaMode.Enhancement;
+        }
+
+        return ChartMetaMode.Amount;
+    }
+
     public partial class ChartBarItem : ObservableObject
     {
         public DateTime Time { get; set; }
         public double Value { get; set; }
         public string Label { get; set; } = string.Empty;
         public string ValueText { get; set; } = string.Empty;
-        public string EnhancementText { get; set; } = string.Empty;
+        public string BarMetaText { get; set; } = string.Empty;
+        public bool HasMetaText { get; set; }
         public double Height { get; set; }
 
         [ObservableProperty]
@@ -623,5 +655,12 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
         [ObservableProperty]
         private bool _isPlaceholder;
+    }
+
+    private enum ChartMetaMode
+    {
+        None,
+        Amount,
+        Enhancement
     }
 }

@@ -19,6 +19,9 @@ public partial class StartupUpdateViewModel : ObservableObject
     private string _stageText = "Подготовка";
 
     [ObservableProperty]
+    private bool _isProgressIndeterminate;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasCurrentFileText))]
     [NotifyPropertyChangedFor(nameof(CurrentFileDisplayText))]
     private string _currentFileText = "Ожидание запуска";
@@ -44,6 +47,7 @@ public partial class StartupUpdateViewModel : ObservableObject
         {
             ProgressPercent = step.Percent;
             StageText = step.Stage;
+            IsProgressIndeterminate = IsIndeterminateStage(step.Stage);
             CurrentFileText = NormalizeCurrentFileText(step.Stage, step.FileName);
 
             if (IsLoggableFileName(CurrentFileText) &&
@@ -59,7 +63,15 @@ public partial class StartupUpdateViewModel : ObservableObject
             }
         });
 
-        await _catalogService.RefreshCategoriesFromGitHubAsync(progress);
+        await _catalogService.RefreshCategoriesOnScheduleAsync(progress);
+    }
+
+    private static bool IsIndeterminateStage(string stage)
+    {
+        if (string.IsNullOrWhiteSpace(stage))
+            return false;
+
+        return stage.Contains("Идет проверка обновлений", StringComparison.OrdinalIgnoreCase);
     }
 
     private static string NormalizeCurrentFileText(string stage, string fileName)
