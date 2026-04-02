@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:StalTool.ViewModels.Auction.Sections"
+             x:Class="StalTool.Views.Pages.AuctionCalculatorPage"
+             x:DataType="vm:AuctionCalculatorViewModel">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20,16,20,20" Spacing="14">
+            <Border Background="#14141E" BorderBrush="#28283A" BorderThickness="1" CornerRadius="12" Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Калькулятор наценки (по графику + активным лотам)" FontSize="14" FontWeight="SemiBold"/>
+                    <Grid ColumnDefinitions="*,220" ColumnSpacing="12">
+                        <TextBox Watermark="Цена продажи, например 15000" Text="{Binding TargetSellPriceInput, Mode=TwoWay}" />
+                        <ComboBox Grid.Column="1"
+                                  SelectedItem="{Binding SelectedMarkupPercent, Mode=TwoWay}"
+                                  ItemsSource="{Binding MarkupOptions}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Border Background="#101019" BorderBrush="#2A2A3A" BorderThickness="1" CornerRadius="8" Padding="10">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Макс. цена покупки под наценку" Foreground="#9CA0B8" FontSize="11"/>
+                                <TextBlock Text="{Binding MaxBuyPriceText}" FontSize="18" FontWeight="Bold" Foreground="#EDEDF7"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Background="#101019" BorderBrush="#2A2A3A" BorderThickness="1" CornerRadius="8" Padding="10">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Рекомендованная закупка" Foreground="#9CA0B8" FontSize="11"/>
+                                <TextBlock Text="{Binding RecommendedBuyPriceText}" FontSize="18" FontWeight="Bold" Foreground="#44FF88"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <TextBlock Text="{Binding MarketReferenceText}" Foreground="#7E8198" FontSize="11"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#14141E" BorderBrush="#28283A" BorderThickness="1" CornerRadius="12" Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Факт продажи: профит или просадка" FontSize="14" FontWeight="SemiBold"/>
+                    <Grid ColumnDefinitions="*,*,220" ColumnSpacing="12">
+                        <TextBox Watermark="Цена продажи" Text="{Binding SoldPriceInput, Mode=TwoWay}" />
+                        <TextBox Grid.Column="1" Watermark="Цена закупки" Text="{Binding PurchasePriceInput, Mode=TwoWay}" />
+                        <ComboBox Grid.Column="2"
+                                  SelectedItem="{Binding SelectedSaleChannel, Mode=TwoWay}"
+                                  ItemsSource="{Binding SaleChannels}" />
+                    </Grid>
+                    <TextBlock Text="{Binding SaleOutcomeText}" Foreground="{Binding SaleOutcomeBrush}" FontSize="16" FontWeight="SemiBold"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#14141E" BorderBrush="#28283A" BorderThickness="1" CornerRadius="12" Padding="14">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Быстрые расчеты процентов" FontSize="14" FontWeight="SemiBold"/>
+                    <Grid ColumnDefinitions="*,220" ColumnSpacing="12">
+                        <TextBox Watermark="База (число)" Text="{Binding QuickBaseInput, Mode=TwoWay}" />
+                        <TextBox Grid.Column="1" Watermark="% (например 18)" Text="{Binding QuickPercentInput, Mode=TwoWay}" />
+                    </Grid>
+                    <TextBlock Text="{Binding QuickResultText}" FontSize="13" Foreground="#C8CCE2"/>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <TextBox Watermark="Было" Text="{Binding QuickFromInput, Mode=TwoWay}" />
+                        <TextBox Grid.Column="1" Watermark="Стало" Text="{Binding QuickToInput, Mode=TwoWay}" />
+                    </Grid>
+                    <TextBlock Text="{Binding QuickChangeText}" FontSize="13" Foreground="#C8CCE2"/>
+                </StackPanel>
+            </Border>
+
+            <Border Background="#12131B" BorderBrush="#28283A" BorderThickness="1" CornerRadius="12" Padding="14">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Блок аналитики (заглушка)" FontSize="14" FontWeight="SemiBold"/>
+                    <TextBlock Text="{Binding AnalyticsSummary}" Foreground="#A9ACC1" TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

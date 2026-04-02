@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 
 namespace StalTool.Views.Pages;
@@ -12,6 +13,11 @@ public partial class AuctionPriceChartPage : UserControl
     public AuctionPriceChartPage()
     {
         InitializeComponent();
+    }
+
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
     }
 
     private void OnRootPointerPressed(object? sender, PointerPressedEventArgs e)

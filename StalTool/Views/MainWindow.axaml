@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:StalTool.ViewModels"
         xmlns:vmAuction="using:StalTool.ViewModels.Auction"
+        xmlns:vmAuctionSections="using:StalTool.ViewModels.Auction.Sections"
         xmlns:pages="using:StalTool.Views.Pages"
         x:Class="StalTool.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -27,7 +28,16 @@
     
     <Window.DataTemplates>
         <DataTemplate DataType="vmAuction:AuctionViewModel">
-            <pages:AuctionPriceChartPage DataContext="{Binding PriceChartSection}" />
+            <ContentControl Content="{Binding CurrentSection}" />
+        </DataTemplate>
+        <DataTemplate DataType="vmAuctionSections:AuctionPriceChartViewModel">
+            <pages:AuctionPriceChartPage />
+        </DataTemplate>
+        <DataTemplate DataType="vmAuctionSections:AuctionCalculatorViewModel">
+            <pages:AuctionCalculatorPage />
+        </DataTemplate>
+        <DataTemplate DataType="vmAuctionSections:AuctionRadarViewModel">
+            <pages:AuctionRadarPage />
         </DataTemplate>
     </Window.DataTemplates>
 

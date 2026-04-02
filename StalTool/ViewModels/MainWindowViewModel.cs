@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StalTool.Models;
 using StalTool.ViewModels.Auction;
+using StalTool.ViewModels.Auction.Sections;
 using StalTool.ViewModels.Base;
 
 namespace StalTool.ViewModels;
@@ -15,6 +16,7 @@ namespace StalTool.ViewModels;
 public partial class MainWindowViewModel : ViewModelBase
 {
     private readonly NavigationService _navigationService;
+    private readonly AuctionViewModel _auctionPage;
 
     [ObservableProperty] private string _username = "BrykLeeN";
     [ObservableProperty] private string _userInitial = "B";
@@ -49,14 +51,15 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty] private bool _hasSubTabs = true;
     [ObservableProperty] private bool _hasSubTab3 = true;
     [ObservableProperty] private string _subTab1Title = "График цен";
-    [ObservableProperty] private string _subTab2Title = "История лотов";
-    [ObservableProperty] private string _subTab3Title = "Калькулятор";
+    [ObservableProperty] private string _subTab2Title = "Калькулятор";
+    [ObservableProperty] private string _subTab3Title = "Радар";
     [ObservableProperty] private bool _isSubTab1Active = true;
     [ObservableProperty] private bool _isSubTab2Active = false;
     [ObservableProperty] private bool _isSubTab3Active = false;
 
     public MainWindowViewModel()
     {
+        _auctionPage = new AuctionViewModel();
         _navigationService = new NavigationService();
         _navigationService.CurrentPageChanged += page => CurrentPage = page;
 
@@ -185,12 +188,13 @@ public partial class MainWindowViewModel : ViewModelBase
         HasSubTabs = true;
         HasSubTab3 = true;
         SubTab1Title = "График цен";
-        SubTab2Title = "История лотов";
-        SubTab3Title = "Калькулятор";
+        SubTab2Title = "Калькулятор";
+        SubTab3Title = "Радар";
         ResetSubTabs();
         IsSubTab1Active = true;
 
-        _navigationService.Navigate(new AuctionViewModel());
+        _auctionPage.CurrentSection = _auctionPage.PriceChartSection;
+        _navigationService.Navigate(_auctionPage);
     }
 
     [RelayCommand]
@@ -260,7 +264,7 @@ public partial class MainWindowViewModel : ViewModelBase
         IsSubTab1Active = true;
 
         if (IsAuctionActive)
-            _navigationService.Navigate(new AuctionViewModel());
+            ActivateAuctionSection(_auctionPage.PriceChartSection);
     }
 
     [RelayCommand]
@@ -268,6 +272,9 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         ResetSubTabs();
         IsSubTab2Active = true;
+
+        if (IsAuctionActive)
+            ActivateAuctionSection(_auctionPage.CalculatorSection);
     }
 
     [RelayCommand]
@@ -275,6 +282,15 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         ResetSubTabs();
         IsSubTab3Active = true;
+
+        if (IsAuctionActive)
+            ActivateAuctionSection(_auctionPage.RadarSection);
+    }
+
+    private void ActivateAuctionSection(ViewModelBase section)
+    {
+        _auctionPage.CurrentSection = section;
+        _navigationService.Navigate(_auctionPage);
     }
 
     private void ApplyTierColors(string tier)
