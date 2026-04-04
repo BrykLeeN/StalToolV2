@@ -56,7 +56,7 @@
                             <TextBlock Text="Авторизация"
                                        FontSize="16"
                                        Foreground="{StaticResource BrushTextSecondary}"/>
-                            <TextBlock Text="Макет входа в стиле основного интерфейса"
+                            <TextBlock Text="Макет входа"
                                        Margin="0,8,0,0"
                                        FontSize="13"
                                        Foreground="{StaticResource BrushTextMuted}"/>

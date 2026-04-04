@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
+using Avalonia.Threading;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using StalTool.Converters;
 using StalTool.Models;
 using StalTool.Services;
 
@@ -12,18 +15,30 @@ namespace StalTool.ViewModels.Auction.Sections;
 
 public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 {
+    private const int MinSearchLengthForVariantAutoExpand = 2;
+
     private readonly AuctionService _auctionService;
     private readonly CatalogService _catalogService;
     private readonly List<AuctionCategoryGroup> _allCategories = new();
     private readonly List<PricePoint> _currentSales = new();
     private readonly Dictionary<string, ObservableCollection<PricePoint>> _priceBufferByItem = new();
     private readonly Dictionary<string, bool> _expansionBeforeSearch = new();
+    private readonly Dictionary<string, string> _categorySearchIndex = new();
+    private readonly Dictionary<string, string> _itemSearchIndex = new();
+    private readonly DispatcherTimer _searchDebounceTimer;
+    private string _pendingSearchText = string.Empty;
+    private string _lastAppliedSearchNormalized = string.Empty;
     private bool _isSearchMode;
 
     public AuctionPriceChartViewModel()
     {
         _auctionService = new AuctionService();
         _catalogService = new CatalogService();
+        _searchDebounceTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(120)
+        };
+        _searchDebounceTimer.Tick += OnSearchDebounceTick;
 
         Categories = new ObservableCollection<AuctionCategoryGroup>();
         AvailableDays = new ObservableCollection<DateTime>();
@@ -115,7 +130,18 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
     partial void OnSearchTextChanged(string value)
     {
-        ApplyCategoryFilter();
+        _pendingSearchText = value ?? string.Empty;
+        _searchDebounceTimer.Stop();
+        _searchDebounceTimer.Start();
+    }
+
+    [RelayCommand]
+    private void ClearSearch()
+    {
+        if (string.IsNullOrEmpty(SearchText))
+            return;
+
+        SearchText = string.Empty;
     }
 
     partial void OnSelectedEnhancementFilterChanged(EnhancementFilterOption? value)
@@ -158,6 +184,24 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
         }
 
         SelectedItem = item;
+    }
+
+    [RelayCommand]
+    private void CollapseCategoryByItem(AuctionCatalogItem? item)
+    {
+        if (item is null)
+            return;
+
+        var category = _allCategories.FirstOrDefault(c =>
+            c.Items.Any(i =>
+                i.ItemId == item.ItemId ||
+                i.QualityVariants.Any(v => v.ItemId == item.ItemId)));
+
+        if (category is null || !category.IsExpanded)
+            return;
+
+        category.IsExpanded = false;
+        category.ShowCollapsedSelectedIndicator = category.HasSelectedItem;
     }
 
     [RelayCommand]
@@ -234,21 +278,26 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
     private void LoadCategories()
     {
         LoadCategoriesInternal(_catalogService.GetCachedCategories());
+        WarmUpCategoryIcons();
     }
 
     private void LoadCategoriesInternal(IEnumerable<AuctionCategoryGroup> groups)
     {
         _allCategories.Clear();
         Categories.Clear();
+        _categorySearchIndex.Clear();
+        _itemSearchIndex.Clear();
 
         foreach (var category in groups)
         {
             category.FilteredItems = new ObservableCollection<AuctionCatalogItem>(category.Items);
             category.IsExpanded = false;
+            _categorySearchIndex[category.CategoryName] = category.CategoryName.ToLowerInvariant();
             foreach (var item in category.Items)
             {
                 item.IsExpanded = false;
                 item.IsSelected = false;
+                _itemSearchIndex[item.ItemId] = BuildItemSearchIndex(item);
                 foreach (var variant in item.QualityVariants)
                     variant.IsSelected = false;
             }
@@ -265,8 +314,11 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
 
     private void ApplyCategoryFilter()
     {
-        var hasSearch = !string.IsNullOrWhiteSpace(SearchText);
-        var search = SearchText.Trim();
+        var normalizedSearch = (_pendingSearchText ?? string.Empty).Trim().ToLowerInvariant();
+        var hasSearch = normalizedSearch.Length > 0;
+        if (normalizedSearch == _lastAppliedSearchNormalized && hasSearch == _isSearchMode)
+            return;
+
         var startedSearch = hasSearch && !_isSearchMode;
         var finishedSearch = !hasSearch && _isSearchMode;
 
@@ -277,43 +329,146 @@ public partial class AuctionPriceChartViewModel : Base.ViewModelBase
                 _expansionBeforeSearch[category.CategoryName] = category.IsExpanded;
         }
 
-        Categories.Clear();
+        var visibleCategories = new List<AuctionCategoryGroup>(_allCategories.Count);
 
         foreach (var category in _allCategories)
         {
+            var categoryMatchesSearch = hasSearch &&
+                                       _categorySearchIndex.TryGetValue(category.CategoryName, out var categorySearchValue) &&
+                                       categorySearchValue.Contains(normalizedSearch, StringComparison.Ordinal);
             var filteredItems = hasSearch
                 ? category.Items.Where(x =>
-                        x.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                        category.CategoryName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                        x.QualityVariants.Any(v => v.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase)))
+                        categoryMatchesSearch ||
+                        ItemMatchesSearch(x, normalizedSearch))
                     .ToList()
                 : category.Items.ToList();
 
             foreach (var item in filteredItems.Where(x => x.HasQualityVariants))
             {
-                item.IsExpanded = hasSearch && (
-                    item.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    item.QualityVariants.Any(v => v.DisplayName.Contains(search, StringComparison.OrdinalIgnoreCase)));
+                var shouldExpand = hasSearch &&
+                                   normalizedSearch.Length >= MinSearchLengthForVariantAutoExpand &&
+                                   ItemOrVariantMatchesSearch(item, normalizedSearch);
+                if (item.IsExpanded != shouldExpand)
+                    item.IsExpanded = shouldExpand;
             }
 
-            category.FilteredItems.Clear();
-            foreach (var item in filteredItems)
-                category.FilteredItems.Add(item);
+            ReplaceFilteredItems(category.FilteredItems, filteredItems);
 
             if (category.FilteredItems.Count == 0)
                 continue;
 
             if (hasSearch)
-                category.IsExpanded = true;
+            {
+                if (!category.IsExpanded)
+                    category.IsExpanded = true;
+            }
             else if (finishedSearch && _expansionBeforeSearch.TryGetValue(category.CategoryName, out var wasExpanded))
-                category.IsExpanded = wasExpanded;
+            {
+                if (category.IsExpanded != wasExpanded)
+                    category.IsExpanded = wasExpanded;
+            }
 
             category.ShowCollapsedSelectedIndicator = category.HasSelectedItem && !category.IsExpanded;
 
-            Categories.Add(category);
+            visibleCategories.Add(category);
         }
 
+        ReplaceCategories(Categories, visibleCategories);
+        _lastAppliedSearchNormalized = normalizedSearch;
         _isSearchMode = hasSearch;
+    }
+
+    private static void ReplaceFilteredItems(ObservableCollection<AuctionCatalogItem> target, IReadOnlyList<AuctionCatalogItem> source)
+    {
+        if (target.Count == source.Count)
+        {
+            var sameOrder = true;
+            for (int i = 0; i < source.Count; i++)
+            {
+                if (!ReferenceEquals(target[i], source[i]))
+                {
+                    sameOrder = false;
+                    break;
+                }
+            }
+
+            if (sameOrder)
+                return;
+        }
+
+        target.Clear();
+        foreach (var item in source)
+            target.Add(item);
+    }
+
+    private static void ReplaceCategories(ObservableCollection<AuctionCategoryGroup> target, IReadOnlyList<AuctionCategoryGroup> source)
+    {
+        if (target.Count == source.Count)
+        {
+            var sameOrder = true;
+            for (int i = 0; i < source.Count; i++)
+            {
+                if (!ReferenceEquals(target[i], source[i]))
+                {
+                    sameOrder = false;
+                    break;
+                }
+            }
+
+            if (sameOrder)
+                return;
+        }
+
+        target.Clear();
+        foreach (var category in source)
+            target.Add(category);
+    }
+
+    private static string BuildItemSearchIndex(AuctionCatalogItem item)
+    {
+        var parts = new List<string> { item.DisplayName };
+        if (item.QualityVariants.Count > 0)
+            parts.AddRange(item.QualityVariants.Select(x => x.DisplayName));
+
+        return string.Join('\n', parts).ToLowerInvariant();
+    }
+
+    private bool ItemMatchesSearch(AuctionCatalogItem item, string normalizedSearch)
+    {
+        if (_itemSearchIndex.TryGetValue(item.ItemId, out var value))
+            return value.Contains(normalizedSearch, StringComparison.Ordinal);
+
+        var fallback = BuildItemSearchIndex(item);
+        _itemSearchIndex[item.ItemId] = fallback;
+        return fallback.Contains(normalizedSearch, StringComparison.Ordinal);
+    }
+
+    private static bool ItemOrVariantMatchesSearch(AuctionCatalogItem item, string normalizedSearch)
+    {
+        if (item.DisplayName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return item.QualityVariants.Any(v => v.DisplayName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void OnSearchDebounceTick(object? sender, EventArgs e)
+    {
+        _searchDebounceTimer.Stop();
+        ApplyCategoryFilter();
+    }
+
+    private void WarmUpCategoryIcons()
+    {
+        var iconPaths = _allCategories
+            .SelectMany(c => c.Items)
+            .SelectMany(item => item.QualityVariants.Count > 0
+                ? item.QualityVariants.Select(v => v.IconPath).Prepend(item.IconPath)
+                : Enumerable.Repeat(item.IconPath, 1))
+            .Where(path => !string.IsNullOrWhiteSpace(path))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        _ = Task.Run(() => IconPathToBitmapConverter.Instance.WarmUp(iconPaths));
     }
 
     private void EnsureBufferLoaded(string itemId)

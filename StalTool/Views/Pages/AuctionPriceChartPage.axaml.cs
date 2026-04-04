@@ -5,6 +5,8 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
+using StalTool.Models;
+using StalTool.ViewModels.Auction.Sections;
 
 namespace StalTool.Views.Pages;
 
@@ -27,6 +29,24 @@ public partial class AuctionPriceChartPage : UserControl
 
         if (sender is InputElement inputElement)
             inputElement.Focus();
+    }
+
+    private void OnCategoryItemPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(this);
+        if (!point.Properties.IsMiddleButtonPressed)
+            return;
+
+        if (DataContext is not AuctionPriceChartViewModel viewModel)
+            return;
+
+        if (sender is not Control { DataContext: AuctionCatalogItem item })
+            return;
+
+        if (viewModel.CollapseCategoryByItemCommand.CanExecute(item))
+            viewModel.CollapseCategoryByItemCommand.Execute(item);
+
+        e.Handled = true;
     }
 
     private static bool IsInteractiveElement(Visual source)

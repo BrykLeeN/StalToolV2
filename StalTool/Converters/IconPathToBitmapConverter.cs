@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Avalonia.Data.Converters;
@@ -24,6 +25,17 @@ public sealed class IconPathToBitmapConverter : IValueConverter
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         return null;
+    }
+
+    public void WarmUp(IEnumerable<string> paths)
+    {
+        foreach (var path in paths)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                continue;
+
+            _cache.GetOrAdd(path, LoadBitmap);
+        }
     }
 
     private static Bitmap? LoadBitmap(string raw)

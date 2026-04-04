@@ -169,16 +169,10 @@
         <Setter Property="BorderBrush" Value="{DynamicResource BrushAppAccent}"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage TextBlock.CategoryArrow">
-        <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
-        <Setter Property="RenderTransform" Value="rotate(0deg)"/>
-        <Setter Property="Transitions">
-            <Transitions>
-                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
-            </Transitions>
-        </Setter>
+        <Setter Property="Text" Value="▸"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage ToggleButton.CategoryToggle:checked TextBlock.CategoryArrow">
-        <Setter Property="RenderTransform" Value="rotate(180deg)"/>
+        <Setter Property="Text" Value="▾"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage Button.CategoryItemBtn">
         <Setter Property="Background" Value="#171329"/>
@@ -239,9 +233,9 @@
         <Setter Property="FocusAdorner" Value="{x:Null}"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner:focus">
-        <Setter Property="Background" Value="#130F1F"/>
-        <Setter Property="BorderThickness" Value="1.05"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="CornerRadius" Value="13"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner /template/ Border#border">
@@ -257,22 +251,43 @@
         <Setter Property="CornerRadius" Value="13"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner:focus /template/ Border#border">
-        <Setter Property="Background" Value="#130F1F"/>
-        <Setter Property="BorderThickness" Value="1.05"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="CornerRadius" Value="13"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner:focus /template/ Border#borderElement">
-        <Setter Property="Background" Value="#130F1F"/>
-        <Setter Property="BorderThickness" Value="1.05"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="CornerRadius" Value="13"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage TextBox.AuctionCategorySearchInner:focus /template/ Border#PART_BorderElement">
-        <Setter Property="Background" Value="#130F1F"/>
-        <Setter Property="BorderThickness" Value="1.05"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="CornerRadius" Value="13"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage Button.AuctionSearchClearBtn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="MinWidth" Value="22"/>
+        <Setter Property="Height" Value="22"/>
+        <Setter Property="CornerRadius" Value="11"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrushTextSecondary}"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage Button.AuctionSearchClearBtn:pointerover">
+        <Setter Property="Background" Value="#241B3B"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrushTextPrimary}"/>
+    </Style>
+    <Style Selector=".AuctionPriceChartPage Button.AuctionSearchClearBtn:pressed">
+        <Setter Property="Background" Value="#30234E"/>
     </Style>
     <Style Selector=".AuctionPriceChartPage Button.AuctionCalendarTrigger">
         <Setter Property="Background" Value="#19142A"/>
