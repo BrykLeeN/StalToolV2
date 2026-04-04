@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:StalTool.Views.Controls"
+             x:Class="StalTool.Views.Controls.CalculatorMetricCard">
+    <Border Background="{DynamicResource BrushBgSurface}"
+            BorderBrush="{DynamicResource BrushBorder}"
+            BorderThickness="1"
+            CornerRadius="10"
+            Padding="12">
+        <StackPanel Spacing="6">
+            <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=controls:CalculatorMetricCard}}"
+                       Foreground="{DynamicResource BrushTextSecondary}"
+                       FontSize="12"/>
+            <TextBlock Text="{Binding Value, RelativeSource={RelativeSource AncestorType=controls:CalculatorMetricCard}}"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       Foreground="{Binding ValueBrush, RelativeSource={RelativeSource AncestorType=controls:CalculatorMetricCard}}"/>
+        </StackPanel>
+    </Border>
+</UserControl>

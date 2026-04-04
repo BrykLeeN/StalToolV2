@@ -1,73 +1,162 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:StalTool.ViewModels.Auction.Sections"
+             xmlns:controls="using:StalTool.Views.Controls"
              x:Class="StalTool.Views.Pages.AuctionCalculatorPage"
              x:DataType="vm:AuctionCalculatorViewModel">
+    <UserControl.Styles>
+        <Style Selector="Border.CalcCard">
+            <Setter Property="Background" Value="{DynamicResource BrushBgCard}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BrushBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+        <Style Selector="TextBlock.CardTitle">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource BrushTextPrimary}"/>
+        </Style>
+        <Style Selector="TextBlock.CardHint">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource BrushTextSecondary}"/>
+        </Style>
+    </UserControl.Styles>
+
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="20,16,20,20" Spacing="14">
-            <Border Background="#14141E" BorderBrush="#28283A" BorderThickness="1" CornerRadius="12" Padding="14">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Калькулятор наценки (по графику + активным лотам)" FontSize="14" FontWeight="SemiBold"/>
-                    <Grid ColumnDefinitions="*,220" ColumnSpacing="12">
-                        <TextBox Watermark="Цена продажи, например 15000" Text="{Binding TargetSellPriceInput, Mode=TwoWay}" />
-                        <ComboBox Grid.Column="1"
-                                  SelectedItem="{Binding SelectedMarkupPercent, Mode=TwoWay}"
-                                  ItemsSource="{Binding MarkupOptions}" />
-                    </Grid>
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                        <Border Background="#101019" BorderBrush="#2A2A3A" BorderThickness="1" CornerRadius="8" Padding="10">
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Макс. цена покупки под наценку" Foreground="#9CA0B8" FontSize="11"/>
-                                <TextBlock Text="{Binding MaxBuyPriceText}" FontSize="18" FontWeight="Bold" Foreground="#EDEDF7"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Grid.Column="1" Background="#101019" BorderBrush="#2A2A3A" BorderThickness="1" CornerRadius="8" Padding="10">
-                            <StackPanel Spacing="4">
-                                <TextBlock Text="Рекомендованная закупка" Foreground="#9CA0B8" FontSize="11"/>
-                                <TextBlock Text="{Binding RecommendedBuyPriceText}" FontSize="18" FontWeight="Bold" Foreground="#44FF88"/>
-                            </StackPanel>
-                        </Border>
-                    </Grid>
-                    <TextBlock Text="{Binding MarketReferenceText}" Foreground="#7E8198" FontSize="11"/>
-                </StackPanel>
+        <StackPanel Margin="20,16,20,20" Spacing="12">
+            <Border Classes="CalcCard" Background="{DynamicResource BannerGradient}" BorderBrush="{DynamicResource BrushBorderAccent}">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Торговый калькулятор" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource BrushTextPrimary}"/>
+                        <TextBlock Text="Цельный рабочий макет: расчет закупки, итог сделки и аналитические подсказки в одном экране."
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource BrushTextSecondary}"/>
+                    </StackPanel>
+                    <Border Grid.Column="1"
+                            Background="#3A285F"
+                            BorderBrush="{DynamicResource BrushBorderAccent}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="12,8"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="Mockup v2"
+                                   Foreground="#EAD9FF"
+                                   FontWeight="SemiBold"/>
+                    </Border>
+                </Grid>
             </Border>
 
-            <Border Background="#14141E" BorderBrush="#28283A" BorderThickness="1" CornerRadius="12" Padding="14">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Факт продажи: профит или просадка" FontSize="14" FontWeight="SemiBold"/>
-                    <Grid ColumnDefinitions="*,*,220" ColumnSpacing="12">
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                <Border Classes="CalcCard">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="CardTitle" Text="План закупки под цель продажи"/>
+                        <TextBlock Classes="CardHint" Text="Введи цену продажи и нужную наценку, чтобы получить верхнюю и безопасную цену закупки." TextWrapping="Wrap"/>
+                        <Grid ColumnDefinitions="*,180" ColumnSpacing="10">
+                        <TextBox Watermark="Цена продажи, например 15000" Text="{Binding TargetSellPriceInput, Mode=TwoWay}" />
+                            <ComboBox Grid.Column="1"
+                                      SelectedItem="{Binding SelectedMarkupPercent, Mode=TwoWay}"
+                                      ItemsSource="{Binding MarkupOptions}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <controls:CalculatorMetricCard Title="Верхняя закупка"
+                                                           Value="{Binding MaxBuyPriceText}"
+                                                           ValueBrush="{DynamicResource BrushTextPrimary}"/>
+                            <controls:CalculatorMetricCard Grid.Column="1"
+                                                           Title="Рекомендовано брать"
+                                                           Value="{Binding RecommendedBuyPriceText}"
+                                                           ValueBrush="{DynamicResource BrushProfit}"/>
+                        </Grid>
+                        <TextBlock Classes="CardHint" Text="{Binding MarketReferenceText}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Classes="CalcCard">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="CardTitle" Text="Итог сделки"/>
+                        <TextBlock Classes="CardHint" Text="Сравнение закупки и продажи с учетом комиссии канала."/>
+                        <Grid ColumnDefinitions="*,*,180" ColumnSpacing="10">
                         <TextBox Watermark="Цена продажи" Text="{Binding SoldPriceInput, Mode=TwoWay}" />
                         <TextBox Grid.Column="1" Watermark="Цена закупки" Text="{Binding PurchasePriceInput, Mode=TwoWay}" />
                         <ComboBox Grid.Column="2"
                                   SelectedItem="{Binding SelectedSaleChannel, Mode=TwoWay}"
                                   ItemsSource="{Binding SaleChannels}" />
-                    </Grid>
-                    <TextBlock Text="{Binding SaleOutcomeText}" Foreground="{Binding SaleOutcomeBrush}" FontSize="16" FontWeight="SemiBold"/>
-                </StackPanel>
-            </Border>
+                        </Grid>
+                        <Border Background="#131A1C" BorderBrush="#1D3E2A" BorderThickness="1" CornerRadius="10" Padding="12">
+                            <TextBlock Text="{Binding SaleOutcomeText}" Foreground="{Binding SaleOutcomeBrush}" FontSize="17" FontWeight="SemiBold"/>
+                        </Border>
+                    </StackPanel>
+                </Border>
 
-            <Border Background="#14141E" BorderBrush="#28283A" BorderThickness="1" CornerRadius="12" Padding="14">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Быстрые расчеты процентов" FontSize="14" FontWeight="SemiBold"/>
-                    <Grid ColumnDefinitions="*,220" ColumnSpacing="12">
-                        <TextBox Watermark="База (число)" Text="{Binding QuickBaseInput, Mode=TwoWay}" />
-                        <TextBox Grid.Column="1" Watermark="% (например 18)" Text="{Binding QuickPercentInput, Mode=TwoWay}" />
-                    </Grid>
-                    <TextBlock Text="{Binding QuickResultText}" FontSize="13" Foreground="#C8CCE2"/>
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                        <TextBox Watermark="Было" Text="{Binding QuickFromInput, Mode=TwoWay}" />
-                        <TextBox Grid.Column="1" Watermark="Стало" Text="{Binding QuickToInput, Mode=TwoWay}" />
-                    </Grid>
-                    <TextBlock Text="{Binding QuickChangeText}" FontSize="13" Foreground="#C8CCE2"/>
-                </StackPanel>
-            </Border>
+                <Border Grid.Row="1" Classes="CalcCard">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="CardTitle" Text="Быстрые проценты"/>
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Border Background="{DynamicResource BrushBgSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" CornerRadius="10" Padding="12">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Процент от числа" Foreground="{DynamicResource BrushTextPrimary}" FontWeight="SemiBold"/>
+                                    <Grid ColumnDefinitions="*,140" ColumnSpacing="8">
+                                        <TextBox Watermark="База" Text="{Binding QuickBaseInput, Mode=TwoWay}" />
+                                        <TextBox Grid.Column="1" Watermark="% (например 18)" Text="{Binding QuickPercentInput, Mode=TwoWay}" />
+                                    </Grid>
+                                    <TextBlock Text="{Binding QuickResultText}" Foreground="{DynamicResource BrushTextSecondary}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Background="{DynamicResource BrushBgSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" CornerRadius="10" Padding="12">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Изменение значения" Foreground="{DynamicResource BrushTextPrimary}" FontWeight="SemiBold"/>
+                                    <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                        <TextBox Watermark="Было" Text="{Binding QuickFromInput, Mode=TwoWay}" />
+                                        <TextBox Grid.Column="1" Watermark="Стало" Text="{Binding QuickToInput, Mode=TwoWay}" />
+                                    </Grid>
+                                    <TextBlock Text="{Binding QuickChangeText}" Foreground="{DynamicResource BrushTextSecondary}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
 
-            <Border Background="#12131B" BorderBrush="#28283A" BorderThickness="1" CornerRadius="12" Padding="14">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Блок аналитики (заглушка)" FontSize="14" FontWeight="SemiBold"/>
-                    <TextBlock Text="{Binding AnalyticsSummary}" Foreground="#A9ACC1" TextWrapping="Wrap"/>
-                </StackPanel>
-            </Border>
+                <Border Grid.Row="1" Grid.Column="1" Classes="CalcCard">
+                    <StackPanel Spacing="10">
+                        <TextBlock Classes="CardTitle" Text="Блок аналитики (макет)"/>
+                        <TextBlock Classes="CardHint" Text="Черновой визуальный прототип: показывает, как будут выглядеть подсказки и сигналы." TextWrapping="Wrap"/>
+                        <Grid ColumnDefinitions="1.2*,*" ColumnSpacing="10">
+                            <Border Background="#0E1017" BorderBrush="#242A3B" BorderThickness="1" CornerRadius="10" Padding="10">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Тренд за 7 дней" Foreground="{DynamicResource BrushTextPrimary}" FontWeight="SemiBold"/>
+                                    <Grid Height="94" ColumnDefinitions="*,*,*,*,*,*,*" VerticalAlignment="Bottom" ColumnSpacing="4">
+                                        <Border Background="#543A88" Grid.Column="0" VerticalAlignment="Bottom" Height="34" CornerRadius="4,4,0,0"/>
+                                        <Border Background="#6F49B0" Grid.Column="1" VerticalAlignment="Bottom" Height="46" CornerRadius="4,4,0,0"/>
+                                        <Border Background="#8A57D5" Grid.Column="2" VerticalAlignment="Bottom" Height="40" CornerRadius="4,4,0,0"/>
+                                        <Border Background="#9A63EA" Grid.Column="3" VerticalAlignment="Bottom" Height="56" CornerRadius="4,4,0,0"/>
+                                        <Border Background="#AC75FF" Grid.Column="4" VerticalAlignment="Bottom" Height="71" CornerRadius="4,4,0,0"/>
+                                        <Border Background="#9B59FF" Grid.Column="5" VerticalAlignment="Bottom" Height="60" CornerRadius="4,4,0,0"/>
+                                        <Border Background="#C06DFF" Grid.Column="6" VerticalAlignment="Bottom" Height="79" CornerRadius="4,4,0,0"/>
+                                    </Grid>
+                                    <TextBlock Text="Точка входа: 12 150 ₽ • Цель: 14 400 ₽" Foreground="{DynamicResource BrushTextSecondary}" FontSize="12"/>
+                                </StackPanel>
+                            </Border>
+                            <StackPanel Grid.Column="1" Spacing="8">
+                                <Border Background="#12201A" BorderBrush="#1E5A3F" BorderThickness="1" CornerRadius="10" Padding="10">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Сигнал" Foreground="#89D2AE" FontSize="12"/>
+                                        <TextBlock Text="Покупка в зоне интереса" Foreground="#C8F6DD" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#20180F" BorderBrush="#5D4527" BorderThickness="1" CornerRadius="10" Padding="10">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="Риск" Foreground="#E8BF86" FontSize="12"/>
+                                        <TextBlock Text="Волатильность выше средней" Foreground="#FFE1B5" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="{DynamicResource BrushBgSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" CornerRadius="10" Padding="10">
+                                    <TextBlock Text="{Binding AnalyticsSummary}" Foreground="{DynamicResource BrushTextSecondary}" TextWrapping="Wrap"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

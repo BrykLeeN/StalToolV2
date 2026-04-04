@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:StalTool.ViewModels.Auction.Sections"
+             xmlns:controls="using:StalTool.Views.Controls"
              x:Class="StalTool.Views.Pages.AuctionRadarPage"
              x:DataType="vm:AuctionRadarViewModel">
     <Grid Margin="20,16,20,20" ColumnDefinitions="*,*" ColumnSpacing="14">
@@ -12,14 +13,7 @@
                 <ItemsControl ItemsSource="{Binding ActiveItems}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#101019" BorderBrush="#2A2A3A" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
-                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                                    <TextBlock Text="{Binding ItemName}" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding CurrentPriceText}" Foreground="#D5D8ED"/>
-                                    <TextBlock Grid.Row="1" Text="{Binding TargetPriceText}" Foreground="#89A3FF" FontSize="11"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Активен" Foreground="#44FF88" FontSize="11"/>
-                                </Grid>
-                            </Border>
+                            <controls:RadarWatchItemCard/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -28,14 +22,7 @@
                 <ItemsControl ItemsSource="{Binding InactiveItems}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#101019" BorderBrush="#2A2A3A" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
-                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                                    <TextBlock Text="{Binding ItemName}" FontWeight="SemiBold"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding CurrentPriceText}" Foreground="#D5D8ED"/>
-                                    <TextBlock Grid.Row="1" Text="{Binding TargetPriceText}" Foreground="#89A3FF" FontSize="11"/>
-                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Не активен" Foreground="#FF8A94" FontSize="11"/>
-                                </Grid>
-                            </Border>
+                            <controls:RadarWatchItemCard/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -48,12 +35,7 @@
                 <ItemsControl ItemsSource="{Binding Settings}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#101019" BorderBrush="#2A2A3A" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,8">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Text="{Binding Name}" Foreground="#C8CCE2"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding Value}" Foreground="#9EA3BD"/>
-                                </Grid>
-                            </Border>
+                            <controls:RadarSettingItemCard/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
