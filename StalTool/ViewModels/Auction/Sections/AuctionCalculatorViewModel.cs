@@ -1,8 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Globalization;
+using System.Linq;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using StalTool.Models;
+using StalTool.Services;
 
 namespace StalTool.ViewModels.Auction.Sections;
 
@@ -10,32 +16,53 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 {
     private const double AuctionSaleFee = 0.10;
     private const double DiscordSaleFee = 0.03;
-    private const double ThreeDayAveragePrice = 12600;
-    private const double ActiveLotsAveragePrice = 12150;
 
-    public ObservableCollection<double> MarkupOptions { get; } = new()
+    private readonly AuctionService _auctionService = new();
+    private readonly CatalogService _catalogService = new();
+    private readonly List<AuctionCategoryGroup> _allCategories = new();
+    private readonly Dictionary<string, string> _itemSearchIndex = new();
+    private readonly Dictionary<string, double> _marketPriceByItemId = new(StringComparer.Ordinal);
+
+    public AuctionCalculatorViewModel()
     {
-        5, 8, 10, 12, 15, 18, 20, 25
-    };
+        MarkupOptions = new ObservableCollection<double> { 5, 8, 10, 12, 15, 18, 20, 25, 30 };
+        SaleChannels = new ObservableCollection<string> { "Продажа на аукционе", "Продажа в Discord" };
+        Categories = new ObservableCollection<AuctionCategoryGroup>();
+        ActiveLots = new ObservableCollection<AuctionLot>();
 
-    public ObservableCollection<string> SaleChannels { get; } = new()
-    {
-        "Продажа на аукционе",
-        "Продажа в Discord",
-    };
+        LoadCategories();
+        UpdateFeeText();
+        RecalculateQuickValues();
+    }
 
-    [ObservableProperty] private string _targetSellPriceInput = string.Empty;
-    [ObservableProperty] private double _selectedMarkupPercent = 10;
-    [ObservableProperty] private string _maxBuyPriceText = "—";
-    [ObservableProperty] private string _recommendedBuyPriceText = "—";
-    [ObservableProperty] private string _marketReferenceText =
-        "Данные пока заглушка: активные лоты + история за 3 дня";
+    public ObservableCollection<double> MarkupOptions { get; }
+    public ObservableCollection<string> SaleChannels { get; }
+    public ObservableCollection<AuctionCategoryGroup> Categories { get; }
+    public ObservableCollection<AuctionLot> ActiveLots { get; }
 
-    [ObservableProperty] private string _soldPriceInput = string.Empty;
-    [ObservableProperty] private string _purchasePriceInput = string.Empty;
+    [ObservableProperty] private AuctionCatalogItem? _selectedItem;
+    [ObservableProperty] private string _searchText = string.Empty;
+    [ObservableProperty] private bool _isActiveLotsOverlayOpen;
+    [ObservableProperty] private string _activeLotsHeaderText = "Активные лоты";
+
+    [ObservableProperty] private string _quantityInput = "1";
+    [ObservableProperty] private string _sellUnitPriceInput = string.Empty;
+    [ObservableProperty] private double _selectedMarkupPercent = 15;
     [ObservableProperty] private string _selectedSaleChannel = "Продажа на аукционе";
-    [ObservableProperty] private string _saleOutcomeText = "Введите сумму продажи и закупки";
-    [ObservableProperty] private IBrush _saleOutcomeBrush = Brushes.LightGray;
+
+    [ObservableProperty] private string _offerBuyUnitPriceText = "—";
+    [ObservableProperty] private string _offerBuyTotalText = "—";
+    [ObservableProperty] private string _netSellTotalText = "—";
+    [ObservableProperty] private string _grossSellTotalText = "—";
+    [ObservableProperty] private string _profitPerUnitText = "—";
+    [ObservableProperty] private string _profitTotalText = "Итог по партии появится после ввода цены и количества";
+    [ObservableProperty] private IBrush _profitTotalBrush = Brushes.LightGray;
+    [ObservableProperty] private string _breakEvenSellPriceText = "—";
+    [ObservableProperty] private string _marketHintText = "Ориентиры появятся после выбора предмета.";
+    [ObservableProperty] private string _recommendedSellUnitPriceText = "—";
+    [ObservableProperty] private string _recommendedBuyUnitPriceText = "—";
+    [ObservableProperty] private string _recommendedPartyText = "—";
+    [ObservableProperty] private string _saleFeeText = "Комиссия продажи: 10%";
 
     [ObservableProperty] private string _quickBaseInput = string.Empty;
     [ObservableProperty] private string _quickPercentInput = string.Empty;
@@ -43,75 +70,398 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
     [ObservableProperty] private string _quickFromInput = string.Empty;
     [ObservableProperty] private string _quickToInput = string.Empty;
     [ObservableProperty] private string _quickChangeText = "—";
+    [ObservableProperty] private string _expressionInput = string.Empty;
+    [ObservableProperty] private string _expressionResultText = "—";
 
-    [ObservableProperty] private string _analyticsSummary =
-        "Аналитика в разработке: позже здесь будет прогноз, когда покупать/продавать по тренду и активным лотам.";
-
-    public AuctionCalculatorViewModel()
+    partial void OnSelectedItemChanged(AuctionCatalogItem? value)
     {
-        RecalculateTradePlan();
-        RecalculateSaleOutcome();
-        RecalculateQuickValues();
+        UpdateSelectedFlags();
+        UpdateItemRecommendations();
+        UpdateActiveLots();
+        RecalculateTradeOutcome();
     }
 
-    partial void OnTargetSellPriceInputChanged(string value) => RecalculateTradePlan();
-    partial void OnSelectedMarkupPercentChanged(double value) => RecalculateTradePlan();
-    partial void OnSoldPriceInputChanged(string value) => RecalculateSaleOutcome();
-    partial void OnPurchasePriceInputChanged(string value) => RecalculateSaleOutcome();
-    partial void OnSelectedSaleChannelChanged(string value) => RecalculateSaleOutcome();
+    partial void OnSearchTextChanged(string value) => ApplyCategoryFilter();
+
+    partial void OnQuantityInputChanged(string value)
+    {
+        UpdateItemRecommendations();
+        RecalculateTradeOutcome();
+    }
+
+    partial void OnSellUnitPriceInputChanged(string value) => RecalculateTradeOutcome();
+
+    partial void OnSelectedMarkupPercentChanged(double value)
+    {
+        UpdateItemRecommendations();
+        RecalculateTradeOutcome();
+    }
+
+    partial void OnSelectedSaleChannelChanged(string value)
+    {
+        UpdateFeeText();
+        RecalculateTradeOutcome();
+    }
+
     partial void OnQuickBaseInputChanged(string value) => RecalculateQuickValues();
     partial void OnQuickPercentInputChanged(string value) => RecalculateQuickValues();
     partial void OnQuickFromInputChanged(string value) => RecalculateQuickValues();
     partial void OnQuickToInputChanged(string value) => RecalculateQuickValues();
+    partial void OnExpressionInputChanged(string value) => RecalculateQuickValues();
 
-    private void RecalculateTradePlan()
+    [RelayCommand]
+    private void ClearSearch()
     {
-        if (!TryParseMoney(TargetSellPriceInput, out var targetSellPrice) || targetSellPrice <= 0)
+        if (string.IsNullOrEmpty(SearchText))
+            return;
+
+        SearchText = string.Empty;
+    }
+
+    [RelayCommand]
+    private void SelectItem(AuctionCatalogItem? item)
+    {
+        if (item is null)
+            return;
+
+        SelectedItem = item;
+        OpenActiveLotsOverlay();
+    }
+
+    [RelayCommand]
+    private void ToggleOrSelectItem(AuctionCatalogItem? item)
+    {
+        if (item is null)
+            return;
+
+        if (item.HasQualityVariants)
         {
-            MaxBuyPriceText = "—";
-            RecommendedBuyPriceText = "—";
+            item.IsExpanded = !item.IsExpanded;
+            return;
+        }
+
+        SelectedItem = item;
+        OpenActiveLotsOverlay();
+    }
+
+    [RelayCommand]
+    private void CollapseCategoryByItem(AuctionCatalogItem? item)
+    {
+        if (item is null)
+            return;
+
+        var category = _allCategories.FirstOrDefault(c =>
+            c.Items.Any(i =>
+                i.ItemId == item.ItemId ||
+                i.QualityVariants.Any(v => v.ItemId == item.ItemId)));
+
+        if (category is null || !category.IsExpanded)
+            return;
+
+        category.IsExpanded = false;
+        category.ShowCollapsedSelectedIndicator = category.HasSelectedItem;
+    }
+
+    [RelayCommand]
+    private void CloseActiveLotsOverlay()
+    {
+        IsActiveLotsOverlayOpen = false;
+    }
+
+    [RelayCommand]
+    private void ApplyLotToCalculator(AuctionLot? lot)
+    {
+        if (lot is null)
+            return;
+
+        var quantity = Math.Max(1, lot.Amount);
+        QuantityInput = quantity.ToString(CultureInfo.InvariantCulture);
+        SellUnitPriceInput = lot.CurrentPrice.ToString(CultureInfo.InvariantCulture);
+        IsActiveLotsOverlayOpen = false;
+    }
+
+    [RelayCommand]
+    private void ApplyRecommendedSellPrice()
+    {
+        if (SelectedItem is null)
+            return;
+
+        var recommendedSell = GetApproxMarketSellUnitPrice(SelectedItem);
+        SellUnitPriceInput = Math.Round(recommendedSell, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture);
+    }
+
+    [RelayCommand]
+    private void IncreaseQuantity()
+    {
+        var quantity = TryParseQuantity(QuantityInput, out var parsed) ? parsed : 1;
+        quantity = Math.Min(quantity + 1, 99_999);
+        QuantityInput = quantity.ToString(CultureInfo.InvariantCulture);
+    }
+
+    [RelayCommand]
+    private void DecreaseQuantity()
+    {
+        var quantity = TryParseQuantity(QuantityInput, out var parsed) ? parsed : 1;
+        quantity = Math.Max(quantity - 1, 1);
+        QuantityInput = quantity.ToString(CultureInfo.InvariantCulture);
+    }
+
+    [RelayCommand]
+    private void SetQuantityPreset(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return;
+
+        if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var preset) || preset <= 0)
+            return;
+
+        QuantityInput = preset.ToString(CultureInfo.InvariantCulture);
+    }
+
+    [RelayCommand]
+    private void AddTradeToHistory()
+    {
+        // Кнопка добавлена заранее: сохранение истории подключим позже.
+    }
+
+    private void LoadCategories()
+    {
+        _allCategories.Clear();
+        Categories.Clear();
+        _itemSearchIndex.Clear();
+
+        var cached = _catalogService.GetCachedCategories();
+        foreach (var category in cached.OrderBy(x => x.CategoryName))
+        {
+            category.FilteredItems = new ObservableCollection<AuctionCatalogItem>(category.Items);
+            category.IsExpanded = false;
+            category.HasSelectedItem = false;
+            category.ShowCollapsedSelectedIndicator = false;
+
+            foreach (var item in category.Items)
+            {
+                item.IsExpanded = false;
+                item.IsSelected = false;
+                _itemSearchIndex[item.ItemId] = BuildItemSearchIndex(item);
+
+                foreach (var variant in item.QualityVariants)
+                    variant.IsSelected = false;
+            }
+
+            _allCategories.Add(category);
+            Categories.Add(category);
+        }
+
+        SelectedItem = GetFirstSelectableItem(Categories);
+    }
+
+    private void ApplyCategoryFilter()
+    {
+        var normalizedSearch = (SearchText ?? string.Empty).Trim().ToLowerInvariant();
+        var hasSearch = normalizedSearch.Length > 0;
+        var visibleCategories = new List<AuctionCategoryGroup>(_allCategories.Count);
+
+        foreach (var category in _allCategories)
+        {
+            var categoryMatchesSearch = hasSearch &&
+                                        category.CategoryName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase);
+            var filteredItems = hasSearch
+                ? category.Items.Where(x => categoryMatchesSearch || ItemMatchesSearch(x, normalizedSearch)).ToList()
+                : category.Items.ToList();
+
+            ReplaceFilteredItems(category.FilteredItems, filteredItems);
+            if (category.FilteredItems.Count == 0)
+                continue;
+
+            if (hasSearch)
+            {
+                category.IsExpanded = true;
+                foreach (var item in category.FilteredItems.Where(x => x.HasQualityVariants))
+                {
+                    item.IsExpanded = ItemOrVariantMatchesSearch(item, normalizedSearch);
+                }
+            }
+
+            category.ShowCollapsedSelectedIndicator = category.HasSelectedItem && !category.IsExpanded;
+            visibleCategories.Add(category);
+        }
+
+        ReplaceCategories(Categories, visibleCategories);
+    }
+
+    private static void ReplaceFilteredItems(ObservableCollection<AuctionCatalogItem> target, IReadOnlyList<AuctionCatalogItem> source)
+    {
+        target.Clear();
+        foreach (var item in source)
+            target.Add(item);
+    }
+
+    private static void ReplaceCategories(ObservableCollection<AuctionCategoryGroup> target, IReadOnlyList<AuctionCategoryGroup> source)
+    {
+        target.Clear();
+        foreach (var category in source)
+            target.Add(category);
+    }
+
+    private static string BuildItemSearchIndex(AuctionCatalogItem item)
+    {
+        var parts = new List<string> { item.DisplayName };
+        if (item.QualityVariants.Count > 0)
+            parts.AddRange(item.QualityVariants.Select(x => x.DisplayName));
+
+        return string.Join('\n', parts).ToLowerInvariant();
+    }
+
+    private bool ItemMatchesSearch(AuctionCatalogItem item, string normalizedSearch)
+    {
+        if (_itemSearchIndex.TryGetValue(item.ItemId, out var value))
+            return value.Contains(normalizedSearch, StringComparison.Ordinal);
+
+        var fallback = BuildItemSearchIndex(item);
+        _itemSearchIndex[item.ItemId] = fallback;
+        return fallback.Contains(normalizedSearch, StringComparison.Ordinal);
+    }
+
+    private static bool ItemOrVariantMatchesSearch(AuctionCatalogItem item, string normalizedSearch)
+    {
+        if (item.DisplayName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return item.QualityVariants.Any(v => v.DisplayName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void OpenActiveLotsOverlay()
+    {
+        if (SelectedItem is null)
+            return;
+
+        UpdateActiveLots();
+        ActiveLotsHeaderText = $"Активные лоты: {SelectedItem.DisplayName}";
+        IsActiveLotsOverlayOpen = true;
+    }
+
+    private void UpdateActiveLots()
+    {
+        ActiveLots.Clear();
+        if (SelectedItem is null)
+            return;
+
+        foreach (var lot in _auctionService.GetMockActiveLots(SelectedItem))
+            ActiveLots.Add(lot);
+    }
+
+    private void UpdateSelectedFlags()
+    {
+        foreach (var category in _allCategories)
+        {
+            foreach (var item in category.Items)
+            {
+                if (item.HasQualityVariants)
+                {
+                    var selectedVariant = item.QualityVariants
+                        .FirstOrDefault(v => SelectedItem is not null && v.ItemId == SelectedItem.ItemId);
+                    item.IsSelected = selectedVariant is not null;
+                    if (selectedVariant is not null)
+                        item.IsExpanded = true;
+                    foreach (var variant in item.QualityVariants)
+                        variant.IsSelected = selectedVariant is not null && variant.ItemId == selectedVariant.ItemId;
+                }
+                else
+                {
+                    item.IsSelected = SelectedItem is not null && item.ItemId == SelectedItem.ItemId;
+                }
+            }
+
+            category.HasSelectedItem = category.Items.Any(x => x.IsSelected || x.QualityVariants.Any(v => v.IsSelected));
+            category.ShowCollapsedSelectedIndicator = category.HasSelectedItem && !category.IsExpanded;
+        }
+    }
+
+    private static IEnumerable<AuctionCatalogItem> GetSelectableItems(AuctionCatalogItem item)
+    {
+        return item.HasQualityVariants ? item.QualityVariants : new[] { item };
+    }
+
+    private static AuctionCatalogItem? GetFirstSelectableItem(IEnumerable<AuctionCategoryGroup> categories)
+    {
+        return categories.SelectMany(x => x.Items).SelectMany(GetSelectableItems).FirstOrDefault();
+    }
+
+    private void UpdateItemRecommendations()
+    {
+        if (SelectedItem is null)
+        {
+            RecommendedSellUnitPriceText = "—";
+            RecommendedBuyUnitPriceText = "—";
+            RecommendedPartyText = "—";
+            MarketHintText = "Ориентиры появятся после выбора предмета.";
+            return;
+        }
+
+        var qty = TryParseQuantity(QuantityInput, out var parsedQty) ? parsedQty : 1;
+        var recommendedSellUnit = GetApproxMarketSellUnitPrice(SelectedItem);
+        var markupRatio = SelectedMarkupPercent / 100.0;
+        var recommendedBuyUnit = recommendedSellUnit / (1 + markupRatio);
+
+        RecommendedSellUnitPriceText = FormatMoney(recommendedSellUnit);
+        RecommendedBuyUnitPriceText = FormatMoney(recommendedBuyUnit);
+        RecommendedPartyText =
+            $"Ориентир по партии ({qty} шт): купить ~{FormatMoney(recommendedBuyUnit * qty)} / продать ~{FormatMoney(recommendedSellUnit * qty)}";
+        MarketHintText = $"Ориентир для «{SelectedItem.DisplayName}». Это приблизительные значения по рынку.";
+    }
+
+    private void RecalculateTradeOutcome()
+    {
+        if (!TryParseMoney(SellUnitPriceInput, out var sellUnitPrice) || sellUnitPrice <= 0)
+        {
+            OfferBuyUnitPriceText = "—";
+            OfferBuyTotalText = "—";
+            GrossSellTotalText = "—";
+            NetSellTotalText = "—";
+            ProfitPerUnitText = "—";
+            ProfitTotalText = "Укажите цену продажи";
+            ProfitTotalBrush = Brushes.LightGray;
+            BreakEvenSellPriceText = "—";
+            UpdateFeeText();
+            return;
+        }
+
+        if (!TryParseQuantity(QuantityInput, out var quantity) || quantity <= 0)
+        {
+            OfferBuyUnitPriceText = "—";
+            OfferBuyTotalText = "—";
+            GrossSellTotalText = "—";
+            NetSellTotalText = "—";
+            ProfitPerUnitText = "—";
+            ProfitTotalText = "Укажите корректное количество";
+            ProfitTotalBrush = Brushes.LightGray;
+            BreakEvenSellPriceText = "—";
+            UpdateFeeText();
             return;
         }
 
         var markupRatio = SelectedMarkupPercent / 100.0;
-        var maxBuyPrice = targetSellPrice / (1 + markupRatio);
-        var marketBaseline = (ThreeDayAveragePrice * 0.55) + (ActiveLotsAveragePrice * 0.45);
-        var recommendedBuy = Math.Min(maxBuyPrice, marketBaseline * (1 - markupRatio * 0.55));
-
-        MaxBuyPriceText = FormatMoney(maxBuyPrice);
-        RecommendedBuyPriceText = FormatMoney(recommendedBuy);
-        MarketReferenceText = $"Основа расчета: 3 дня {FormatMoney(ThreeDayAveragePrice)} и активные лоты {FormatMoney(ActiveLotsAveragePrice)}";
-
-        if (string.IsNullOrWhiteSpace(PurchasePriceInput))
-            PurchasePriceInput = Math.Round(recommendedBuy, MidpointRounding.AwayFromZero).ToString("0");
-    }
-
-    private void RecalculateSaleOutcome()
-    {
-        if (!TryParseMoney(SoldPriceInput, out var soldPrice) ||
-            !TryParseMoney(PurchasePriceInput, out var purchasePrice) ||
-            soldPrice <= 0 || purchasePrice <= 0)
-        {
-            SaleOutcomeText = "Введите сумму продажи и закупки";
-            SaleOutcomeBrush = Brushes.LightGray;
-            return;
-        }
-
+        var offerBuyUnit = sellUnitPrice / (1 + markupRatio);
         var fee = SelectedSaleChannel == "Продажа в Discord" ? DiscordSaleFee : AuctionSaleFee;
-        var netIncome = soldPrice * (1 - fee);
-        var profit = netIncome - purchasePrice;
-        var profitPercent = purchasePrice == 0 ? 0 : profit / purchasePrice * 100;
+        var grossSellTotal = sellUnitPrice * quantity;
+        var netSellUnit = sellUnitPrice * (1 - fee);
+        var netSellTotal = netSellUnit * quantity;
+        var offerBuyTotal = offerBuyUnit * quantity;
+        var profitPerUnit = netSellUnit - offerBuyUnit;
+        var totalProfit = profitPerUnit * quantity;
+        var breakEvenSellUnit = offerBuyUnit / (1 - fee);
 
-        if (profit >= 0)
-        {
-            SaleOutcomeText = $"Профит: {FormatMoney(profit)} ({profitPercent:0.##}%)";
-            SaleOutcomeBrush = new SolidColorBrush(Color.Parse("#44FF88"));
-        }
-        else
-        {
-            SaleOutcomeText = $"Просадка: {FormatMoney(Math.Abs(profit))} ({profitPercent:0.##}%)";
-            SaleOutcomeBrush = new SolidColorBrush(Color.Parse("#FF6A78"));
-        }
+        OfferBuyUnitPriceText = FormatMoney(offerBuyUnit);
+        OfferBuyTotalText = FormatMoney(offerBuyTotal);
+        GrossSellTotalText = FormatMoney(grossSellTotal);
+        NetSellTotalText = FormatMoney(netSellTotal);
+        ProfitPerUnitText = $"{FormatSignedMoney(profitPerUnit)} ({(offerBuyUnit == 0 ? 0 : profitPerUnit / offerBuyUnit * 100):+0.##;-0.##;0}%)";
+        ProfitTotalText = $"Итог по партии ({quantity} шт): {FormatSignedMoney(totalProfit)}";
+        ProfitTotalBrush = totalProfit >= 0
+            ? new SolidColorBrush(Color.Parse("#7FE9B0"))
+            : new SolidColorBrush(Color.Parse("#FF8792"));
+        BreakEvenSellPriceText = FormatMoney(breakEvenSellUnit);
+        UpdateFeeText();
     }
 
     private void RecalculateQuickValues()
@@ -138,6 +488,27 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
         {
             QuickChangeText = "—";
         }
+
+        if (TryEvaluateExpression(ExpressionInput, out var expressionValue))
+        {
+            ExpressionResultText = $"{expressionValue:0.####}";
+        }
+        else
+        {
+            ExpressionResultText = "—";
+        }
+    }
+
+    private double GetApproxMarketSellUnitPrice(AuctionCatalogItem item)
+    {
+        if (_marketPriceByItemId.TryGetValue(item.ItemId, out var cached))
+            return cached;
+
+        var seed = HashCode.Combine(item.ItemId.ToLowerInvariant(), item.DisplayName.Length);
+        var random = new Random(seed);
+        var price = random.Next(5_500, 95_001);
+        _marketPriceByItemId[item.ItemId] = price;
+        return price;
     }
 
     private static bool TryParseMoney(string input, out double value)
@@ -154,18 +525,75 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
         return double.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
     }
 
+    private static bool TryParseQuantity(string input, out int value)
+    {
+        value = 0;
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+
+        var normalized = input
+            .Replace("шт", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("x", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace(" ", string.Empty, StringComparison.Ordinal);
+        return int.TryParse(normalized, NumberStyles.Integer, CultureInfo.InvariantCulture, out value);
+    }
+
     private static bool TryParsePercent(string input, out double value)
     {
         value = 0;
         if (string.IsNullOrWhiteSpace(input))
             return false;
 
-        var normalized = input.Replace("%", string.Empty, StringComparison.Ordinal).Replace(",", ".", StringComparison.Ordinal);
+        var normalized = input
+            .Replace("%", string.Empty, StringComparison.Ordinal)
+            .Replace(",", ".", StringComparison.Ordinal);
         return double.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+    }
+
+    private static bool TryEvaluateExpression(string input, out double value)
+    {
+        value = 0;
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+
+        var normalized = input.Replace(" ", string.Empty, StringComparison.Ordinal).Replace(",", ".", StringComparison.Ordinal);
+        foreach (var ch in normalized)
+        {
+            if (!(char.IsDigit(ch) || ch is '+' or '-' or '*' or '/' or '(' or ')' or '.'))
+                return false;
+        }
+
+        try
+        {
+            var table = new DataTable { Locale = CultureInfo.InvariantCulture };
+            var raw = table.Compute(normalized, string.Empty);
+            if (raw is null)
+                return false;
+
+            return double.TryParse(Convert.ToString(raw, CultureInfo.InvariantCulture), NumberStyles.Float, CultureInfo.InvariantCulture, out value) &&
+                   !double.IsNaN(value) &&
+                   !double.IsInfinity(value);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static string FormatMoney(double value)
     {
         return $"{Math.Round(value, MidpointRounding.AwayFromZero):N0} ₽";
+    }
+
+    private static string FormatSignedMoney(double value)
+    {
+        var prefix = value >= 0 ? "+" : "-";
+        return $"{prefix}{FormatMoney(Math.Abs(value))}";
+    }
+
+    private void UpdateFeeText()
+    {
+        var fee = SelectedSaleChannel == "Продажа в Discord" ? DiscordSaleFee : AuctionSaleFee;
+        SaleFeeText = $"Комиссия продажи: {fee * 100:0.#}%";
     }
 }
