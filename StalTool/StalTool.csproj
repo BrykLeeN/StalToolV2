@@ -32,4 +32,10 @@
       <Folder Include="Themes\" />
       <Folder Include="Views\Controls\" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Views\Controls\AuctionCategorySelector.axaml.cs">
+        <DependentUpon>AuctionCategorySelector.axaml</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

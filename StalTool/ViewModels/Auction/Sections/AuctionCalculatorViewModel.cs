@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using Avalonia.Threading;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -22,9 +23,17 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
     private readonly List<AuctionCategoryGroup> _allCategories = new();
     private readonly Dictionary<string, string> _itemSearchIndex = new();
     private readonly Dictionary<string, double> _marketPriceByItemId = new(StringComparer.Ordinal);
+    private readonly DispatcherTimer _searchDebounceTimer;
+    private string _pendingSearchText = string.Empty;
 
     public AuctionCalculatorViewModel()
     {
+        _searchDebounceTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(120)
+        };
+        _searchDebounceTimer.Tick += OnSearchDebounceTick;
+
         MarkupOptions = new ObservableCollection<double> { 5, 8, 10, 12, 15, 18, 20, 25, 30 };
         SaleChannels = new ObservableCollection<string> { "Продажа на аукционе", "Продажа в Discord" };
         Categories = new ObservableCollection<AuctionCategoryGroup>();
@@ -81,7 +90,12 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
         RecalculateTradeOutcome();
     }
 
-    partial void OnSearchTextChanged(string value) => ApplyCategoryFilter();
+    partial void OnSearchTextChanged(string value)
+    {
+        _pendingSearchText = value ?? string.Empty;
+        _searchDebounceTimer.Stop();
+        _searchDebounceTimer.Start();
+    }
 
     partial void OnQuantityInputChanged(string value)
     {
@@ -230,7 +244,7 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
         Categories.Clear();
         _itemSearchIndex.Clear();
 
-        var cached = _catalogService.GetCachedCategories();
+        var cached = CloneCategories(_catalogService.GetCachedCategories());
         foreach (var category in cached.OrderBy(x => x.CategoryName))
         {
             category.FilteredItems = new ObservableCollection<AuctionCatalogItem>(category.Items);
@@ -257,7 +271,7 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
     private void ApplyCategoryFilter()
     {
-        var normalizedSearch = (SearchText ?? string.Empty).Trim().ToLowerInvariant();
+        var normalizedSearch = (_pendingSearchText ?? string.Empty).Trim().ToLowerInvariant();
         var hasSearch = normalizedSearch.Length > 0;
         var visibleCategories = new List<AuctionCategoryGroup>(_allCategories.Count);
 
@@ -291,6 +305,22 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
     private static void ReplaceFilteredItems(ObservableCollection<AuctionCatalogItem> target, IReadOnlyList<AuctionCatalogItem> source)
     {
+        if (target.Count == source.Count)
+        {
+            var sameOrder = true;
+            for (int i = 0; i < source.Count; i++)
+            {
+                if (!ReferenceEquals(target[i], source[i]))
+                {
+                    sameOrder = false;
+                    break;
+                }
+            }
+
+            if (sameOrder)
+                return;
+        }
+
         target.Clear();
         foreach (var item in source)
             target.Add(item);
@@ -298,6 +328,22 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
     private static void ReplaceCategories(ObservableCollection<AuctionCategoryGroup> target, IReadOnlyList<AuctionCategoryGroup> source)
     {
+        if (target.Count == source.Count)
+        {
+            var sameOrder = true;
+            for (int i = 0; i < source.Count; i++)
+            {
+                if (!ReferenceEquals(target[i], source[i]))
+                {
+                    sameOrder = false;
+                    break;
+                }
+            }
+
+            if (sameOrder)
+                return;
+        }
+
         target.Clear();
         foreach (var category in source)
             target.Add(category);
@@ -385,6 +431,12 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
     private static AuctionCatalogItem? GetFirstSelectableItem(IEnumerable<AuctionCategoryGroup> categories)
     {
         return categories.SelectMany(x => x.Items).SelectMany(GetSelectableItems).FirstOrDefault();
+    }
+
+    private void OnSearchDebounceTick(object? sender, EventArgs e)
+    {
+        _searchDebounceTimer.Stop();
+        ApplyCategoryFilter();
     }
 
     private void UpdateItemRecommendations()
@@ -595,5 +647,39 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
     {
         var fee = SelectedSaleChannel == "Продажа в Discord" ? DiscordSaleFee : AuctionSaleFee;
         SaleFeeText = $"Комиссия продажи: {fee * 100:0.#}%";
+    }
+
+    private static ObservableCollection<AuctionCategoryGroup> CloneCategories(IEnumerable<AuctionCategoryGroup> categories)
+    {
+        var result = new ObservableCollection<AuctionCategoryGroup>();
+        foreach (var category in categories)
+        {
+            result.Add(new AuctionCategoryGroup
+            {
+                CategoryName = category.CategoryName,
+                Items = new ObservableCollection<AuctionCatalogItem>(category.Items.Select(CloneItem)),
+                FilteredItems = new ObservableCollection<AuctionCatalogItem>()
+            });
+        }
+
+        return result;
+    }
+
+    private static AuctionCatalogItem CloneItem(AuctionCatalogItem source)
+    {
+        var clone = new AuctionCatalogItem
+        {
+            ItemId = source.ItemId,
+            DisplayName = source.DisplayName,
+            Category = source.Category,
+            Rank = source.Rank,
+            IconPath = source.IconPath,
+            HasQualityVariants = source.HasQualityVariants
+        };
+
+        clone.QualityVariants = new ObservableCollection<AuctionCatalogItem>(
+            source.QualityVariants.Select(CloneItem));
+
+        return clone;
     }
 }

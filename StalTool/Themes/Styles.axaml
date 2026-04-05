@@ -393,179 +393,6 @@
         <Setter Property="CornerRadius" Value="22"/>
         <Setter Property="Padding" Value="16"/>
     </Style>
-    <Style Selector=".AuctionCalculatorPage ToggleButton.CategoryToggle">
-        <Setter Property="Background" Value="#1A142B"/>
-        <Setter Property="BorderBrush" Value="#4D3586"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="17"/>
-        <Setter Property="Padding" Value="10,8"/>
-        <Setter Property="Foreground" Value="#D6D0ED"/>
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="{TemplateBinding CornerRadius}"
-                        Padding="{TemplateBinding Padding}">
-                    <ContentPresenter Content="{TemplateBinding Content}"
-                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                </Border>
-            </ControlTemplate>
-        </Setter>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage ToggleButton.CategoryToggle:pointerover">
-        <Setter Property="Background" Value="#211738"/>
-        <Setter Property="BorderBrush" Value="#6A4AB2"/>
-        <Setter Property="Foreground" Value="#EFE8FF"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage ToggleButton.CategoryToggle:checked">
-        <Setter Property="Background" Value="#241A40"/>
-        <Setter Property="BorderBrush" Value="#7A57C9"/>
-        <Setter Property="Foreground" Value="#F6F1FF"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage ToggleButton.CategoryToggle:checked TextBlock.CategoryTitle">
-        <Setter Property="Foreground" Value="#F6F1FF"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage ToggleButton.CategoryToggle.HasSelectedItem">
-        <Setter Property="BorderBrush" Value="{DynamicResource BrushAppAccent}"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage TextBlock.CategoryArrow">
-        <Setter Property="Text" Value="▸"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage ToggleButton.CategoryToggle:checked TextBlock.CategoryArrow">
-        <Setter Property="Text" Value="▾"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Button.CategoryItemBtn">
-        <Setter Property="Background" Value="#171329"/>
-        <Setter Property="BorderBrush" Value="#523790"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="17"/>
-        <Setter Property="Padding" Value="12,10"/>
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="{TemplateBinding BorderThickness}"
-                        CornerRadius="{TemplateBinding CornerRadius}"
-                        Padding="{TemplateBinding Padding}">
-                    <ContentPresenter Content="{TemplateBinding Content}"
-                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                </Border>
-            </ControlTemplate>
-        </Setter>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Button.CategoryItemBtn:pointerover">
-        <Setter Property="Background" Value="#20193A"/>
-        <Setter Property="BorderBrush" Value="#7652C5"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Button.CategoryItemBtn:pressed">
-        <Setter Property="Background" Value="#2A1F4B"/>
-        <Setter Property="BorderBrush" Value="#8C67E0"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Button.CategoryItemBtn.SelectedItem">
-        <Setter Property="Background" Value="#2B1F4B"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BrushAppAccent}"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Border.AuctionCategorySearchFrame">
-        <Setter Property="Background" Value="#161123"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="14"/>
-        <Setter Property="Padding" Value="1"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Border.AuctionCategorySearchFrame:pointerover">
-        <Setter Property="BorderThickness" Value="1.15"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Border.AuctionCategorySearchFrame:focus-within">
-        <Setter Property="Background" Value="#130F1F"/>
-        <Setter Property="BorderThickness" Value="1.3"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage TextBox.AuctionCategorySearchInner">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="CornerRadius" Value="13"/>
-        <Setter Property="Foreground" Value="{DynamicResource BrushTextPrimary}"/>
-        <Setter Property="Padding" Value="9,6"/>
-        <Setter Property="FocusAdorner" Value="{x:Null}"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage TextBox.AuctionCategorySearchInner /template/ Border#border">
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="CornerRadius" Value="13"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage TextBox.AuctionCategorySearchInner /template/ Border#borderElement">
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="CornerRadius" Value="13"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage TextBox.AuctionCategorySearchInner:focus /template/ Border#border">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="CornerRadius" Value="13"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage TextBox.AuctionCategorySearchInner:focus /template/ Border#borderElement">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="CornerRadius" Value="13"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Button.AuctionSearchClearBtn">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="MinWidth" Value="22"/>
-        <Setter Property="Height" Value="22"/>
-        <Setter Property="CornerRadius" Value="11"/>
-        <Setter Property="Foreground" Value="{DynamicResource BrushTextSecondary}"/>
-        <Setter Property="FontSize" Value="15"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Button.AuctionSearchClearBtn:pointerover">
-        <Setter Property="Background" Value="#241B3B"/>
-        <Setter Property="Foreground" Value="{DynamicResource BrushTextPrimary}"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Button.AuctionSearchClearBtn:pressed">
-        <Setter Property="Background" Value="#30234E"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage Border.CalculatorListFrame">
-        <Setter Property="Background" Value="#12111A"/>
-        <Setter Property="BorderBrush" Value="#3B3350"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="12"/>
-        <Setter Property="Padding" Value="6"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage ListBox.CalculatorListBox">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage ListBox.CalculatorListBox ListBoxItem">
-        <Setter Property="Padding" Value="10,7"/>
-        <Setter Property="Margin" Value="0,0,0,4"/>
-        <Setter Property="CornerRadius" Value="9"/>
-        <Setter Property="Background" Value="#171525"/>
-        <Setter Property="Foreground" Value="{DynamicResource BrushTextSecondary}"/>
-        <Setter Property="BorderBrush" Value="#3D305D"/>
-        <Setter Property="BorderThickness" Value="1"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage ListBox.CalculatorListBox ListBoxItem:pointerover">
-        <Setter Property="Background" Value="#1E1930"/>
-        <Setter Property="BorderBrush" Value="#64479D"/>
-        <Setter Property="Foreground" Value="{DynamicResource BrushTextPrimary}"/>
-    </Style>
-    <Style Selector=".AuctionCalculatorPage ListBox.CalculatorListBox ListBoxItem:selected">
-        <Setter Property="Background" Value="#251B3E"/>
-        <Setter Property="BorderBrush" Value="{DynamicResource BrushAppAccent}"/>
-        <Setter Property="Foreground" Value="{DynamicResource BrushTextPrimary}"/>
-    </Style>
     <Style Selector=".AuctionCalculatorPage TextBox.CalculatorInput">
         <Setter Property="Background" Value="#181424"/>
         <Setter Property="BorderBrush" Value="#4A3A73"/>
@@ -670,6 +497,53 @@
     </Style>
     <Style Selector=".AuctionCalculatorPage Button.CalculatorActionButton:pressed">
         <Setter Property="Opacity" Value="0.8"/>
+    </Style>
+    <Style Selector=".AuctionCalculatorPage Border.CalculatorOverlayBackdrop">
+        <Setter Property="Background" Value="#9A05040C"/>
+    </Style>
+    <Style Selector=".AuctionCalculatorPage Border.CalculatorOverlayPanel">
+        <Setter Property="Background" Value="#0B0A12"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentGradientH}"/>
+        <Setter Property="BorderThickness" Value="1.1"/>
+        <Setter Property="CornerRadius" Value="20"/>
+        <Setter Property="Padding" Value="14"/>
+        <Setter Property="BoxShadow" Value="0 20 48 #00000066"/>
+    </Style>
+    <Style Selector=".AuctionCalculatorPage Button.CalculatorOverlayCloseButton">
+        <Setter Property="Background" Value="#201835"/>
+        <Setter Property="BorderBrush" Value="#6644AE"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Foreground" Value="#F3EEFF"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector=".AuctionCalculatorPage Button.CalculatorOverlayCloseButton:pointerover">
+        <Setter Property="Background" Value="#2A2144"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BrushAppAccent}"/>
+    </Style>
+    <Style Selector=".AuctionCalculatorPage Button.CalculatorLotButton">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="CornerRadius" Value="16"/>
+    </Style>
+    <Style Selector=".AuctionCalculatorPage Button.CalculatorLotButton:pointerover Border.CalculatorLotCard">
+        <Setter Property="Background" Value="#1B152A"/>
+        <Setter Property="BorderBrush" Value="#7A57C9"/>
+        <Setter Property="BorderThickness" Value="1.3"/>
+    </Style>
+    <Style Selector=".AuctionCalculatorPage Button.CalculatorLotButton:pressed Border.CalculatorLotCard">
+        <Setter Property="Background" Value="#211935"/>
+        <Setter Property="BorderBrush" Value="#8C67E0"/>
+    </Style>
+    <Style Selector=".AuctionCalculatorPage Border.CalculatorLotCard">
+        <Setter Property="Background" Value="#15111F"/>
+        <Setter Property="BorderBrush" Value="#4A3382"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="BoxShadow" Value="0 8 18 #0000002E"/>
     </Style>
 
     <!-- ListBox без фона -->

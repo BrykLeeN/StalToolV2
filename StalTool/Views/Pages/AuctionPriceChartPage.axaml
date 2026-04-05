@@ -3,15 +3,13 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:conv="using:StalTool.Converters"
+    xmlns:controls="using:StalTool.Views.Controls"
     xmlns:vm="using:StalTool.ViewModels.Auction.Sections"
     x:Name="Root"
     Classes="AuctionPriceChartPage"
     x:DataType="vm:AuctionPriceChartViewModel">
     <UserControl.Resources>
         <conv:IconPathToBitmapConverter x:Key="IconPathToBitmapConverter"/>
-        <conv:RankToBrushConverter x:Key="RankToBrushConverter"/>
-        <conv:RankToLabelConverter x:Key="RankToLabelConverter"/>
-        <conv:StringNotEmptyToBoolConverter x:Key="StringNotEmptyToBoolConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="14"
@@ -29,192 +27,12 @@
                 BorderThickness="1"
                 CornerRadius="22"
                 Padding="14">
-            <Grid RowDefinitions="Auto,Auto,*"
-                  RowSpacing="10">
-                <TextBlock Grid.Row="0"
-                           Text="Категории"
-                           Foreground="{DynamicResource BrushTextPrimary}"
-                           FontSize="18"
-                           FontWeight="SemiBold"/>
-
-                <Border Grid.Row="1"
-                        Classes="AuctionCategorySearchFrame"
-                        HorizontalAlignment="Stretch">
-                    <Grid ColumnDefinitions="*,Auto"
-                          ColumnSpacing="6">
-                        <TextBox Grid.Column="0"
-                                 Text="{Binding SearchText}"
-                                 Watermark="Поиск предмета..."
-                                 Classes="AuctionCategorySearchInner"
-                                 HorizontalAlignment="Stretch"/>
-                        <Button Grid.Column="1"
-                                Command="{Binding ClearSearchCommand}"
-                                IsVisible="{Binding SearchText, Converter={StaticResource StringNotEmptyToBoolConverter}}"
-                                Classes="AuctionSearchClearBtn"
-                                Margin="0,0,6,0"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="×"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Margin="0,-1,0,0"/>
-                        </Button>
-                    </Grid>
-                </Border>
-
-                <ScrollViewer Grid.Row="2"
-                              Padding="0,0,6,0"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
-                    <ItemsControl ItemsSource="{Binding Categories}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Margin="0,0,0,10"
-                                            Spacing="8">
-                                    <ToggleButton x:Name="CategoryToggle"
-                                                  Classes="CategoryToggle"
-                                                  Classes.HasSelectedItem="{Binding HasSelectedItem}"
-                                                  IsChecked="{Binding IsExpanded}"
-                                                  Focusable="False">
-                                        <Grid ColumnDefinitions="Auto,*,Auto"
-                                              ColumnSpacing="8">
-                                            <Border Width="8"
-                                                    Height="8"
-                                                    CornerRadius="8"
-                                                    Background="{DynamicResource BrushAppAccent}"
-                                                    IsVisible="{Binding ShowCollapsedSelectedIndicator}"
-                                                    VerticalAlignment="Center"/>
-                                            <TextBlock Text="{Binding CategoryName}"
-                                                       Grid.Column="1"
-                                                       Classes="CategoryTitle"
-                                                       Foreground="{DynamicResource BrushTextSecondary}"
-                                                       FontSize="14"
-                                                       FontWeight="SemiBold"
-                                                       VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="2"
-                                                       Classes="CategoryArrow"
-                                                       Text="▸"
-                                                       Foreground="{DynamicResource BrushTextPrimary}"
-                                                       FontSize="18"
-                                                       VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </ToggleButton>
-
-                                    <ItemsControl ItemsSource="{Binding FilteredItems}"
-                                                  Margin="8,0,8,0"
-                                                  IsVisible="{Binding IsExpanded}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Spacing="6">
-                                                    <Button Command="{ReflectionBinding DataContext.ToggleOrSelectItemCommand, ElementName=Root}"
-                                                            Classes="CategoryItemBtn"
-                                                            Classes.SelectedItem="{Binding IsSelected}"
-                                                            CommandParameter="{Binding .}"
-                                                            PointerPressed="OnCategoryItemPointerPressed"
-                                                            Margin="0,0,0,2"
-                                                            HorizontalContentAlignment="Stretch">
-                                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto"
-                                                              ColumnSpacing="8">
-                                                            <Border Width="26"
-                                                                    Height="26"
-                                                                    CornerRadius="8"
-                                                                    Background="#1F1635"
-                                                                    BorderBrush="#5A3D99"
-                                                                    BorderThickness="1"
-                                                                    VerticalAlignment="Center">
-                                                                <Image Source="{Binding IconPath, Converter={StaticResource IconPathToBitmapConverter}}"
-                                                                       Stretch="UniformToFill"
-                                                                       Width="20"
-                                                                       Height="20"
-                                                                       HorizontalAlignment="Center"
-                                                                       VerticalAlignment="Center"/>
-                                                            </Border>
-                                                            <TextBlock Text="{Binding DisplayName}"
-                                                                       Grid.Column="1"
-                                                                       Foreground="{DynamicResource BrushTextPrimary}"
-                                                                       FontSize="13"
-                                                                       VerticalAlignment="Center"
-                                                                       TextTrimming="CharacterEllipsis"/>
-                                                            <Border Grid.Column="2"
-                                                                    IsVisible="{Binding Rank, Converter={StaticResource StringNotEmptyToBoolConverter}}"
-                                                                    Background="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=background}"
-                                                                    BorderBrush="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=border}"
-                                                                    BorderThickness="1"
-                                                                    CornerRadius="8"
-                                                                    Padding="7,2"
-                                                                    VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Rank, Converter={StaticResource RankToLabelConverter}}"
-                                                                           Foreground="{Binding Rank, Converter={StaticResource RankToBrushConverter}}"
-                                                                           FontSize="10"/>
-                                                            </Border>
-                                                            <TextBlock Grid.Column="3"
-                                                                       Text="⌄"
-                                                                       IsVisible="{Binding HasQualityVariants}"
-                                                                       Foreground="{DynamicResource BrushTextSecondary}"
-                                                                       FontSize="14"
-                                                                       VerticalAlignment="Center"/>
-                                                        </Grid>
-                                                    </Button>
-
-                                                    <ItemsControl ItemsSource="{Binding VisibleQualityVariants}"
-                                                                  Margin="14,0,0,4"
-                                                                  IsVisible="{Binding IsExpanded}">
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <Button Command="{ReflectionBinding DataContext.SelectItemCommand, ElementName=Root}"
-                                                                        Classes="CategoryItemBtn"
-                                                                        Classes.SelectedItem="{Binding IsSelected}"
-                                                                        CommandParameter="{Binding .}"
-                                                                        PointerPressed="OnCategoryItemPointerPressed"
-                                                                        Margin="0,0,0,6"
-                                                                        HorizontalContentAlignment="Stretch">
-                                                                    <Grid ColumnDefinitions="Auto,*,Auto"
-                                                                          ColumnSpacing="8">
-                                                                        <Border Width="22"
-                                                                                Height="22"
-                                                                                CornerRadius="7"
-                                                                                Background="#1F1635"
-                                                                                BorderBrush="#5A3D99"
-                                                                                BorderThickness="1"
-                                                                                VerticalAlignment="Center">
-                                                                            <Image Source="{Binding IconPath, Converter={StaticResource IconPathToBitmapConverter}}"
-                                                                                   Stretch="UniformToFill"
-                                                                                   Width="16"
-                                                                                   Height="16"
-                                                                                   HorizontalAlignment="Center"
-                                                                                   VerticalAlignment="Center"/>
-                                                                        </Border>
-                                                                        <TextBlock Text="{Binding DisplayName}"
-                                                                                   Grid.Column="1"
-                                                                                   Foreground="{DynamicResource BrushTextPrimary}"
-                                                                                   FontSize="12"
-                                                                                   VerticalAlignment="Center"
-                                                                                   TextTrimming="CharacterEllipsis"/>
-                                                                        <Border Grid.Column="2"
-                                                                                Background="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=background}"
-                                                                                BorderBrush="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=border}"
-                                                                                BorderThickness="1"
-                                                                                CornerRadius="8"
-                                                                                Padding="7,2"
-                                                                                VerticalAlignment="Center">
-                                                                            <TextBlock Text="{Binding Rank, Converter={StaticResource RankToLabelConverter}}"
-                                                                                       Foreground="{Binding Rank, Converter={StaticResource RankToBrushConverter}}"
-                                                                                       FontSize="10"/>
-                                                                        </Border>
-                                                                    </Grid>
-                                                                </Button>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
+            <controls:AuctionCategorySelector Categories="{Binding Categories}"
+                                              SearchText="{Binding SearchText, Mode=TwoWay}"
+                                              ClearSearchCommand="{Binding ClearSearchCommand}"
+                                              ToggleOrSelectItemCommand="{Binding ToggleOrSelectItemCommand}"
+                                              SelectItemCommand="{Binding SelectItemCommand}"
+                                              CollapseCategoryByItemCommand="{Binding CollapseCategoryByItemCommand}"/>
         </Border>
 
         <Border Grid.Column="1"

@@ -7,6 +7,7 @@
         <entry key="StalTool/Themes/Colors.axaml" value="StalTool/StalTool.csproj" />
         <entry key="StalTool/Themes/Controls.axaml" value="StalTool/StalTool.csproj" />
         <entry key="StalTool/Themes/Styles.axaml" value="StalTool/StalTool.csproj" />
+        <entry key="StalTool/Views/Controls/AuctionCategorySelector.axaml" value="StalTool/StalTool.csproj" />
         <entry key="StalTool/Views/Controls/CalculatorMetricCard.axaml" value="StalTool/StalTool.csproj" />
         <entry key="StalTool/Views/Controls/RadarSettingItemCard.axaml" value="StalTool/StalTool.csproj" />
         <entry key="StalTool/Views/Controls/RadarWatchItemCard.axaml" value="StalTool/StalTool.csproj" />

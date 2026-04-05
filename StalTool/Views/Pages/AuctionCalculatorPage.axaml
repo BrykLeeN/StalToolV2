@@ -3,15 +3,13 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:conv="using:StalTool.Converters"
+    xmlns:controls="using:StalTool.Views.Controls"
     xmlns:vm="using:StalTool.ViewModels.Auction.Sections"
     x:Name="Root"
     Classes="AuctionCalculatorPage"
     x:DataType="vm:AuctionCalculatorViewModel">
     <UserControl.Resources>
         <conv:IconPathToBitmapConverter x:Key="IconPathToBitmapConverter"/>
-        <conv:RankToBrushConverter x:Key="RankToBrushConverter"/>
-        <conv:RankToLabelConverter x:Key="RankToLabelConverter"/>
-        <conv:StringNotEmptyToBoolConverter x:Key="StringNotEmptyToBoolConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="14"
@@ -22,186 +20,13 @@
         <Border Grid.Column="0"
                 Grid.RowSpan="2"
                 Classes="CalculatorPanel">
-            <Grid RowDefinitions="Auto,Auto,*"
-                  RowSpacing="10">
-                <TextBlock Grid.Row="0"
-                           Text="Категории"
-                           Foreground="{DynamicResource BrushTextPrimary}"
-                           FontSize="18"
-                           FontWeight="SemiBold"/>
-
-                <Border Grid.Row="1"
-                        Classes="AuctionCategorySearchFrame">
-                    <Grid ColumnDefinitions="*,Auto"
-                          ColumnSpacing="6">
-                        <TextBox Grid.Column="0"
-                                 Text="{Binding SearchText}"
-                                 Watermark="Поиск предмета..."
-                                 Classes="AuctionCategorySearchInner"/>
-                        <Button Grid.Column="1"
-                                Classes="AuctionSearchClearBtn"
-                                Command="{Binding ClearSearchCommand}"
-                                IsVisible="{Binding SearchText, Converter={StaticResource StringNotEmptyToBoolConverter}}"
-                                Margin="0,0,6,0"
-                                VerticalAlignment="Center">
-                            <TextBlock Text="×"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       Margin="0,-1,0,0"/>
-                        </Button>
-                    </Grid>
-                </Border>
-
-                <ScrollViewer Grid.Row="2"
-                              Padding="0,0,6,0"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
-                    <ItemsControl ItemsSource="{Binding Categories}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Margin="0,0,0,10"
-                                            Spacing="8">
-                                    <ToggleButton Classes="CategoryToggle"
-                                                  Classes.HasSelectedItem="{Binding HasSelectedItem}"
-                                                  IsChecked="{Binding IsExpanded}"
-                                                  Focusable="False">
-                                        <Grid ColumnDefinitions="Auto,*,Auto"
-                                              ColumnSpacing="8">
-                                            <Border Width="8"
-                                                    Height="8"
-                                                    CornerRadius="8"
-                                                    Background="{DynamicResource BrushAppAccent}"
-                                                    IsVisible="{Binding ShowCollapsedSelectedIndicator}"
-                                                    VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{Binding CategoryName}"
-                                                       Classes="CategoryTitle"
-                                                       Foreground="{DynamicResource BrushTextSecondary}"
-                                                       FontSize="14"
-                                                       FontWeight="SemiBold"
-                                                       VerticalAlignment="Center"/>
-                                            <TextBlock Grid.Column="2"
-                                                       Classes="CategoryArrow"
-                                                       Text="▸"
-                                                       Foreground="{DynamicResource BrushTextPrimary}"
-                                                       FontSize="18"
-                                                       VerticalAlignment="Center"/>
-                                        </Grid>
-                                    </ToggleButton>
-
-                                    <ItemsControl ItemsSource="{Binding FilteredItems}"
-                                                  Margin="8,0,8,0"
-                                                  IsVisible="{Binding IsExpanded}">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <StackPanel Spacing="6">
-                                                    <Button Classes="CategoryItemBtn"
-                                                            Classes.SelectedItem="{Binding IsSelected}"
-                                                            Command="{ReflectionBinding DataContext.ToggleOrSelectItemCommand, ElementName=Root}"
-                                                            CommandParameter="{Binding .}"
-                                                            HorizontalContentAlignment="Stretch">
-                                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto"
-                                                              ColumnSpacing="8">
-                                                            <Border Width="26"
-                                                                    Height="26"
-                                                                    CornerRadius="8"
-                                                                    Background="#1F1635"
-                                                                    BorderBrush="#5A3D99"
-                                                                    BorderThickness="1"
-                                                                    VerticalAlignment="Center">
-                                                                <Image Source="{Binding IconPath, Converter={StaticResource IconPathToBitmapConverter}}"
-                                                                       Stretch="UniformToFill"
-                                                                       Width="20"
-                                                                       Height="20"
-                                                                       HorizontalAlignment="Center"
-                                                                       VerticalAlignment="Center"/>
-                                                            </Border>
-                                                            <TextBlock Grid.Column="1"
-                                                                       Text="{Binding DisplayName}"
-                                                                       Foreground="{DynamicResource BrushTextPrimary}"
-                                                                       FontSize="13"
-                                                                       VerticalAlignment="Center"
-                                                                       TextTrimming="CharacterEllipsis"/>
-                                                            <Border Grid.Column="2"
-                                                                    IsVisible="{Binding Rank, Converter={StaticResource StringNotEmptyToBoolConverter}}"
-                                                                    Background="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=background}"
-                                                                    BorderBrush="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=border}"
-                                                                    BorderThickness="1"
-                                                                    CornerRadius="8"
-                                                                    Padding="7,2"
-                                                                    VerticalAlignment="Center">
-                                                                <TextBlock Text="{Binding Rank, Converter={StaticResource RankToLabelConverter}}"
-                                                                           Foreground="{Binding Rank, Converter={StaticResource RankToBrushConverter}}"
-                                                                           FontSize="10"/>
-                                                            </Border>
-                                                            <TextBlock Grid.Column="3"
-                                                                       Text="⌄"
-                                                                       IsVisible="{Binding HasQualityVariants}"
-                                                                       Foreground="{DynamicResource BrushTextSecondary}"
-                                                                       FontSize="14"
-                                                                       VerticalAlignment="Center"/>
-                                                        </Grid>
-                                                    </Button>
-
-                                                    <ItemsControl ItemsSource="{Binding VisibleQualityVariants}"
-                                                                  Margin="14,0,0,4"
-                                                                  IsVisible="{Binding IsExpanded}">
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <Button Classes="CategoryItemBtn"
-                                                                        Classes.SelectedItem="{Binding IsSelected}"
-                                                                        Command="{ReflectionBinding DataContext.SelectItemCommand, ElementName=Root}"
-                                                                        CommandParameter="{Binding .}"
-                                                                        Margin="0,0,0,6"
-                                                                        HorizontalContentAlignment="Stretch">
-                                                                    <Grid ColumnDefinitions="Auto,*,Auto"
-                                                                          ColumnSpacing="8">
-                                                                        <Border Width="22"
-                                                                                Height="22"
-                                                                                CornerRadius="7"
-                                                                                Background="#1F1635"
-                                                                                BorderBrush="#5A3D99"
-                                                                                BorderThickness="1"
-                                                                                VerticalAlignment="Center">
-                                                                            <Image Source="{Binding IconPath, Converter={StaticResource IconPathToBitmapConverter}}"
-                                                                                   Stretch="UniformToFill"
-                                                                                   Width="16"
-                                                                                   Height="16"
-                                                                                   HorizontalAlignment="Center"
-                                                                                   VerticalAlignment="Center"/>
-                                                                        </Border>
-                                                                        <TextBlock Grid.Column="1"
-                                                                                   Text="{Binding DisplayName}"
-                                                                                   Foreground="{DynamicResource BrushTextPrimary}"
-                                                                                   FontSize="12"
-                                                                                   VerticalAlignment="Center"
-                                                                                   TextTrimming="CharacterEllipsis"/>
-                                                                        <Border Grid.Column="2"
-                                                                                Background="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=background}"
-                                                                                BorderBrush="{Binding Rank, Converter={StaticResource RankToBrushConverter}, ConverterParameter=border}"
-                                                                                BorderThickness="1"
-                                                                                CornerRadius="8"
-                                                                                Padding="7,2"
-                                                                                VerticalAlignment="Center">
-                                                                            <TextBlock Text="{Binding Rank, Converter={StaticResource RankToLabelConverter}}"
-                                                                                       Foreground="{Binding Rank, Converter={StaticResource RankToBrushConverter}}"
-                                                                                       FontSize="10"/>
-                                                                        </Border>
-                                                                    </Grid>
-                                                                </Button>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </Grid>
+            <controls:AuctionCategorySelector Categories="{Binding Categories}"
+                                              Classes="AuctionPriceChartPage"
+                                              SearchText="{Binding SearchText, Mode=TwoWay}"
+                                              ClearSearchCommand="{Binding ClearSearchCommand}"
+                                              ToggleOrSelectItemCommand="{Binding ToggleOrSelectItemCommand}"
+                                              SelectItemCommand="{Binding SelectItemCommand}"
+                                              CollapseCategoryByItemCommand="{Binding CollapseCategoryByItemCommand}"/>
         </Border>
 
         <Border Grid.Column="1"
@@ -219,21 +44,26 @@
                                TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
 
-                <Grid Grid.Row="1"
-                      ColumnDefinitions="*,130,190"
-                      ColumnSpacing="8">
-                    <TextBox Watermark="Цена продажи"
-                             Classes="CalculatorInput"
-                             Text="{Binding SellUnitPriceInput, Mode=TwoWay}"/>
-                    <ComboBox Grid.Column="1"
-                              Classes="CalculatorCombo"
-                              ItemsSource="{Binding MarkupOptions}"
-                              SelectedItem="{Binding SelectedMarkupPercent, Mode=TwoWay}"/>
-                    <ComboBox Grid.Column="2"
-                              Classes="CalculatorCombo"
-                              ItemsSource="{Binding SaleChannels}"
-                              SelectedItem="{Binding SelectedSaleChannel, Mode=TwoWay}"/>
-                </Grid>
+                <StackPanel Grid.Row="1"
+                            Spacing="6">
+                    <TextBlock Text="Цена продажи за 1 шт"
+                               FontSize="12"
+                               Foreground="{DynamicResource BrushTextSecondary}"/>
+                    <Grid ColumnDefinitions="*,130,190"
+                          ColumnSpacing="8">
+                        <TextBox Watermark="Например 32515"
+                                 Classes="CalculatorInput"
+                                 Text="{Binding SellUnitPriceInput, Mode=TwoWay}"/>
+                        <ComboBox Grid.Column="1"
+                                  Classes="CalculatorCombo"
+                                  ItemsSource="{Binding MarkupOptions}"
+                                  SelectedItem="{Binding SelectedMarkupPercent, Mode=TwoWay}"/>
+                        <ComboBox Grid.Column="2"
+                                  Classes="CalculatorCombo"
+                                  ItemsSource="{Binding SaleChannels}"
+                                  SelectedItem="{Binding SelectedSaleChannel, Mode=TwoWay}"/>
+                    </Grid>
+                </StackPanel>
 
                 <TextBlock Grid.Row="2"
                            Text="{Binding SaleFeeText}"
@@ -455,31 +285,32 @@
 
         <Border Grid.RowSpan="2"
                 Grid.ColumnSpan="3"
-                Background="#8D06060C"
+                Classes="CalculatorOverlayBackdrop"
                 IsVisible="{Binding IsActiveLotsOverlayOpen}"
                 ZIndex="50">
-            <Border Width="980"
+            <Border Width="1000"
                     MaxHeight="520"
                     VerticalAlignment="Top"
                     HorizontalAlignment="Center"
                     Margin="0,20,0,0"
-                    Background="#0A090F"
-                    BorderBrush="#3D2B69"
-                    BorderThickness="1"
-                    CornerRadius="20"
-                    Padding="14">
+                    Classes="CalculatorOverlayPanel">
                 <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0"
                           ColumnDefinitions="*,Auto"
                           Margin="0,0,0,10">
-                        <TextBlock Text="{Binding ActiveLotsHeaderText}"
-                                   Foreground="#F3EEFF"
-                                   FontSize="18"
-                                   FontWeight="SemiBold"/>
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding ActiveLotsHeaderText}"
+                                       Foreground="#F3EEFF"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"/>
+                            <TextBlock Text="Нажмите на лот, чтобы подставить цену и количество в расчет."
+                                       Foreground="#A8A0C5"
+                                       FontSize="12"/>
+                        </StackPanel>
                         <Button Grid.Column="1"
-                                Classes="CalculatorQtyButton"
-                                Width="34"
-                                Height="34"
+                                Classes="CalculatorOverlayCloseButton"
+                                Width="36"
+                                Height="36"
                                 FontSize="16"
                                 Content="×"
                                 Command="{Binding CloseActiveLotsOverlayCommand}"/>
@@ -492,17 +323,14 @@
                         <ItemsControl ItemsSource="{Binding ActiveLots}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Command="{Binding DataContext.ApplyLotToCalculatorCommand, ElementName=Root}"
+                                    <Button Command="{ReflectionBinding DataContext.ApplyLotToCalculatorCommand, ElementName=Root}"
                                             CommandParameter="{Binding .}"
+                                            Classes="CalculatorLotButton"
                                             HorizontalContentAlignment="Stretch"
                                             Margin="0,0,0,10"
                                             Padding="0"
-                                            Background="Transparent"
-                                            BorderBrush="Transparent">
-                                        <Border Background="#15111F"
-                                                BorderBrush="#4A3382"
-                                                BorderThickness="1"
-                                                CornerRadius="16"
+                                            Background="Transparent">
+                                        <Border Classes="CalculatorLotCard"
                                                 Padding="12">
                                             <Grid ColumnDefinitions="48,*,Auto"
                                                   RowDefinitions="Auto,Auto,Auto"
