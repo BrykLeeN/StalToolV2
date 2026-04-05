@@ -15,8 +15,8 @@ namespace StalTool.ViewModels.Auction.Sections;
 
 public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 {
-    private const double AuctionSaleFee = 0.10;
-    private const double DiscordSaleFee = 0.03;
+    private const double AuctionSaleFee = 0.00;
+    private const double DiscordSaleFee = 0.00;
 
     private readonly AuctionService _auctionService = new();
     private readonly CatalogService _catalogService = new();
@@ -55,7 +55,8 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
     [ObservableProperty] private string _activeLotsHeaderText = "Активные лоты";
 
     [ObservableProperty] private string _quantityInput = "1";
-    [ObservableProperty] private string _sellUnitPriceInput = string.Empty;
+    [ObservableProperty] private string _basePriceInput = string.Empty;
+    [ObservableProperty] private string _actualSellPriceInput = string.Empty;
     [ObservableProperty] private double _selectedMarkupPercent = 15;
     [ObservableProperty] private string _selectedSaleChannel = "Продажа на аукционе";
 
@@ -103,7 +104,29 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
         RecalculateTradeOutcome();
     }
 
-    partial void OnSellUnitPriceInputChanged(string value) => RecalculateTradeOutcome();
+    partial void OnBasePriceInputChanged(string value)
+    {
+        var normalized = NormalizeMoneyInput(value);
+        if (!string.Equals(normalized, value, StringComparison.Ordinal))
+        {
+            BasePriceInput = normalized;
+            return;
+        }
+
+        RecalculateTradeOutcome();
+    }
+
+    partial void OnActualSellPriceInputChanged(string value)
+    {
+        var normalized = NormalizeMoneyInput(value);
+        if (!string.Equals(normalized, value, StringComparison.Ordinal))
+        {
+            ActualSellPriceInput = normalized;
+            return;
+        }
+
+        RecalculateTradeOutcome();
+    }
 
     partial void OnSelectedMarkupPercentChanged(double value)
     {
@@ -190,7 +213,7 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
         var quantity = Math.Max(1, lot.Amount);
         QuantityInput = quantity.ToString(CultureInfo.InvariantCulture);
-        SellUnitPriceInput = lot.CurrentPrice.ToString(CultureInfo.InvariantCulture);
+        BasePriceInput = lot.CurrentPrice.ToString(CultureInfo.InvariantCulture);
         IsActiveLotsOverlayOpen = false;
     }
 
@@ -201,7 +224,10 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
             return;
 
         var recommendedSell = GetApproxMarketSellUnitPrice(SelectedItem);
-        SellUnitPriceInput = Math.Round(recommendedSell, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture);
+        var value = Math.Round(recommendedSell, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture);
+        BasePriceInput = value;
+        if (string.IsNullOrWhiteSpace(ActualSellPriceInput))
+            ActualSellPriceInput = value;
     }
 
     [RelayCommand]
@@ -464,14 +490,14 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
     private void RecalculateTradeOutcome()
     {
-        if (!TryParseMoney(SellUnitPriceInput, out var sellUnitPrice) || sellUnitPrice <= 0)
+        if (!TryParseMoney(BasePriceInput, out var basePartyPrice) || basePartyPrice <= 0)
         {
             OfferBuyUnitPriceText = "—";
             OfferBuyTotalText = "—";
             GrossSellTotalText = "—";
             NetSellTotalText = "—";
             ProfitPerUnitText = "—";
-            ProfitTotalText = "Укажите цену продажи";
+            ProfitTotalText = "—";
             ProfitTotalBrush = Brushes.LightGray;
             BreakEvenSellPriceText = "—";
             UpdateFeeText();
@@ -485,7 +511,24 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
             GrossSellTotalText = "—";
             NetSellTotalText = "—";
             ProfitPerUnitText = "—";
-            ProfitTotalText = "Укажите корректное количество";
+            ProfitTotalText = "—";
+            ProfitTotalBrush = Brushes.LightGray;
+            BreakEvenSellPriceText = "—";
+            UpdateFeeText();
+            return;
+        }
+
+        if (!TryParseMoney(ActualSellPriceInput, out var actualSellPartyPrice) || actualSellPartyPrice <= 0)
+        {
+            var baseMarkupRatio = SelectedMarkupPercent / 100.0;
+            var offerBuyTotalOnly = basePartyPrice / (1 + baseMarkupRatio);
+            var offerBuyUnitOnly = offerBuyTotalOnly / quantity;
+            OfferBuyUnitPriceText = FormatMoney(offerBuyUnitOnly);
+            OfferBuyTotalText = FormatMoney(offerBuyTotalOnly);
+            GrossSellTotalText = "—";
+            NetSellTotalText = "—";
+            ProfitPerUnitText = "—";
+            ProfitTotalText = "—";
             ProfitTotalBrush = Brushes.LightGray;
             BreakEvenSellPriceText = "—";
             UpdateFeeText();
@@ -493,14 +536,14 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
         }
 
         var markupRatio = SelectedMarkupPercent / 100.0;
-        var offerBuyUnit = sellUnitPrice / (1 + markupRatio);
+        var offerBuyTotal = basePartyPrice / (1 + markupRatio);
+        var offerBuyUnit = offerBuyTotal / quantity;
         var fee = SelectedSaleChannel == "Продажа в Discord" ? DiscordSaleFee : AuctionSaleFee;
-        var grossSellTotal = sellUnitPrice * quantity;
-        var netSellUnit = sellUnitPrice * (1 - fee);
-        var netSellTotal = netSellUnit * quantity;
-        var offerBuyTotal = offerBuyUnit * quantity;
+        var grossSellTotal = actualSellPartyPrice;
+        var netSellTotal = grossSellTotal * (1 - fee);
+        var netSellUnit = netSellTotal / quantity;
         var profitPerUnit = netSellUnit - offerBuyUnit;
-        var totalProfit = profitPerUnit * quantity;
+        var totalProfit = netSellTotal - offerBuyTotal;
         var breakEvenSellUnit = offerBuyUnit / (1 - fee);
 
         OfferBuyUnitPriceText = FormatMoney(offerBuyUnit);
@@ -645,8 +688,16 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
     private void UpdateFeeText()
     {
-        var fee = SelectedSaleChannel == "Продажа в Discord" ? DiscordSaleFee : AuctionSaleFee;
-        SaleFeeText = $"Комиссия продажи: {fee * 100:0.#}%";
+        SaleFeeText = "Комиссия продажи: 0%";
+    }
+
+    private static string NormalizeMoneyInput(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        var digits = new string(value.Where(char.IsDigit).ToArray());
+        return digits.Length <= 11 ? digits : digits[..11];
     }
 
     private static ObservableCollection<AuctionCategoryGroup> CloneCategories(IEnumerable<AuctionCategoryGroup> categories)
