@@ -15,7 +15,7 @@
 
     <Grid Margin="12"
           ColumnDefinitions="272,*"
-          RowDefinitions="1.56*,0.74*"
+          RowDefinitions="1.3*,1*"
           ColumnSpacing="12"
           RowSpacing="10">
         <Border Grid.RowSpan="2"
@@ -34,185 +34,132 @@
                 Grid.Row="0"
                 ClipToBounds="True"
                 Classes="CalculatorPanel">
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
-                  RowSpacing="6">
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Сделка"
-                               FontSize="19"
-                               FontWeight="Bold"
-                               Foreground="{DynamicResource BrushTextPrimary}"/>
-                    <TextBlock Text="{Binding SelectedItem.DisplayName}"
-                               Foreground="{DynamicResource BrushTextSecondary}"
-                               FontSize="13"
-                               TextTrimming="CharacterEllipsis"/>
-                </StackPanel>
+            <Grid RowDefinitions="Auto,*"
+                  RowSpacing="8">
+                <TextBlock Text="{Binding SelectedItem.DisplayName}"
+                           Foreground="#F2EBFF"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis"/>
 
                 <Grid Grid.Row="1"
-                      ColumnDefinitions="*,*"
-                      ColumnSpacing="8">
-                    <Border Classes="CalculatorMetricCard">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Базовая сумма партии (ориентир рынка)"
-                                       Classes="CalculatorMetricTitle"/>
-                            <TextBox Classes="CalculatorInput"
-                                     Watermark="Сумма за партию"
-                                     Text="{Binding BasePriceInput, Mode=TwoWay}"/>
-                        </StackPanel>
-                    </Border>
-                    <Border Grid.Column="1"
-                            Classes="CalculatorMetricCard">
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Сумма фактической продажи партии"
-                                       Classes="CalculatorMetricTitle"/>
-                            <TextBox Classes="CalculatorInput"
-                                     Watermark="Сумма продажи"
-                                     Text="{Binding ActualSellPriceInput, Mode=TwoWay}"/>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-
-                <Grid Grid.Row="2"
-                      ColumnDefinitions="1.2*,0.9*,1*"
-                      ColumnSpacing="8">
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="Наценка для предложения покупки"
-                                   Classes="CalculatorMetricTitle"/>
-                        <Grid ColumnDefinitions="*,26"
-                              ColumnSpacing="6">
-                            <ComboBox Grid.Column="0"
-                                      Classes="CalculatorCombo"
-                                      ItemsSource="{Binding MarkupOptions}"
-                                      SelectedItem="{Binding SelectedMarkupPercent, Mode=TwoWay}"/>
-                            <TextBlock Grid.Column="1"
-                                       Text="%"
-                                       VerticalAlignment="Center"
-                                       HorizontalAlignment="Center"
-                                       Foreground="{DynamicResource BrushTextSecondary}"/>
+                      ColumnDefinitions="320,*"
+                      ColumnSpacing="10">
+                    <Grid Grid.Column="0"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                          RowSpacing="8">
+                        <Border Classes="CalculatorMetricCard">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Ориентир рынка (партия)" Classes="CalculatorMetricTitle"/>
+                                <TextBox Classes="CalculatorInput"
+                                         Width="300"
+                                         MaxLength="12"
+                                         Watermark="Рыночная цена"
+                                         Text="{Binding BasePriceInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Row="1"
+                                Classes="CalculatorMetricCard">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Факт покупки (партия)" Classes="CalculatorMetricTitle"/>
+                                <TextBox Classes="CalculatorInput"
+                                         Width="300"
+                                         MaxLength="12"
+                                         Watermark="За сколько купили"
+                                         Text="{Binding PurchasePriceInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Row="2"
+                                Classes="CalculatorMetricCard">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="План продажи (партия)" Classes="CalculatorMetricTitle"/>
+                                <TextBox Classes="CalculatorInput"
+                                         Width="300"
+                                         MaxLength="12"
+                                         Watermark="За сколько продадите"
+                                         Text="{Binding ActualSellPriceInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
+                        </Border>
+                        <Grid Grid.Row="3"
+                              ColumnDefinitions="70,90"
+                              ColumnSpacing="8"
+                              Margin="0,2,0,0">
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Наценка" Classes="CalculatorMetricTitle"/>
+                                <ComboBox Classes="CalculatorCombo"
+                                          Width="70"
+                                          ItemsSource="{Binding MarkupOptions}"
+                                          SelectedItem="{Binding SelectedMarkupPercent, Mode=TwoWay}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1"
+                                        Spacing="3">
+                                <TextBlock Text="Кол-во" Classes="CalculatorMetricTitle"/>
+                                <TextBox Classes="CalculatorInput"
+                                         Width="90"
+                                         MaxLength="5"
+                                         HorizontalContentAlignment="Center"
+                                         Text="{Binding QuantityInput, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            </StackPanel>
                         </Grid>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1"
-                                Spacing="6">
-                        <TextBlock Text="Количество"
-                                   Classes="CalculatorMetricTitle"/>
-                        <TextBox Classes="CalculatorInput"
-                                 HorizontalContentAlignment="Center"
-                                 Text="{Binding QuantityInput, Mode=TwoWay}"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="2"
-                                Spacing="6">
-                        <TextBlock Text="Канал продажи"
-                                   Classes="CalculatorMetricTitle"/>
-                        <ComboBox Classes="CalculatorCombo"
-                                  ItemsSource="{Binding SaleChannels}"
-                                  SelectedItem="{Binding SelectedSaleChannel, Mode=TwoWay}"/>
-                    </StackPanel>
-                </Grid>
-
-                <TextBlock Grid.Row="3"
-                           Text="{Binding SaleFeeText}"
-                           Foreground="{DynamicResource BrushTextSecondary}"/>
-
-                <Grid Grid.Row="4"
-                      RowDefinitions="Auto,Auto,Auto"
-                      ColumnSpacing="8"
-                      RowSpacing="8">
-                    <Grid Grid.Row="0"
-                          ColumnDefinitions="*,*,*"
-                          ColumnSpacing="8">
-                        <Border Classes="CalculatorMetricCard">
-                            <StackPanel Spacing="5">
-                                <TextBlock Text="Предложение покупки (1 шт)"
-                                           Classes="CalculatorMetricTitle"/>
-                                <TextBlock Text="{Binding OfferBuyUnitPriceText}"
-                                           Classes="CalculatorMetricValueBig"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Grid.Column="1"
-                                Classes="CalculatorMetricCard">
-                            <StackPanel Spacing="5">
-                                <TextBlock Text="Профит (1 шт)"
-                                           Classes="CalculatorMetricTitle"/>
-                                <TextBlock Text="{Binding ProfitPerUnitText}"
-                                           Classes="CalculatorMetricValue"/>
-                            </StackPanel>
-                        </Border>
-                        <Border Grid.Column="2"
-                                Classes="CalculatorMetricCard">
-                            <StackPanel Spacing="5">
-                                <TextBlock Text="Точка безубытка (1 шт)"
-                                           Classes="CalculatorMetricTitle"/>
-                                <TextBlock Text="{Binding BreakEvenSellPriceText}"
-                                           Classes="CalculatorMetricValue"/>
-                            </StackPanel>
-                        </Border>
+                        <StackPanel Grid.Row="4"
+                                    Spacing="3">
+                            <TextBlock Text="Продажа / где" Classes="CalculatorMetricTitle"/>
+                            <ComboBox Classes="CalculatorCombo"
+                                      Width="300"
+                                      HorizontalAlignment="Left"
+                                      ItemsSource="{Binding SaleChannels}"
+                                      SelectedItem="{Binding SelectedSaleChannel, Mode=TwoWay}"/>
+                        </StackPanel>
                     </Grid>
 
-                    <Grid Grid.Row="1"
-                          ColumnDefinitions="*,*,*"
-                          ColumnSpacing="8">
-                        <Border Classes="CalculatorMetricCard">
-                            <StackPanel Spacing="3">
-                                <TextBlock Text="Покупка (партия)"
-                                           Classes="CalculatorMetricTitle"/>
-                                <TextBlock Text="{Binding OfferBuyTotalText}"
-                                           Classes="CalculatorMetricValue"/>
-                            </StackPanel>
+                    <Grid Grid.Column="1"
+                          RowDefinitions="Auto,Auto,Auto,*"
+                          ColumnDefinitions="*,*"
+                          ColumnSpacing="8"
+                          RowSpacing="8">
+                        <Border Grid.Row="0" Grid.Column="0" Classes="CalculatorMetricCard CalculatorOutputCard">
+                            <TextBlock Text="{Binding OfferBuyUnitPriceText}" Classes="CalculatorOutputValue"/>
                         </Border>
-                        <Border Grid.Column="1"
-                                Classes="CalculatorMetricCard">
-                            <StackPanel Spacing="3">
-                                <TextBlock Text="Продажа (партия)"
-                                           Classes="CalculatorMetricTitle"/>
-                                <TextBlock Text="{Binding GrossSellTotalText}"
-                                           Classes="CalculatorMetricValue"/>
-                            </StackPanel>
+                        <Border Grid.Row="0" Grid.Column="1" Classes="CalculatorMetricCard CalculatorOutputCard">
+                            <TextBlock Text="{Binding ProfitPerUnitText}" Classes="CalculatorOutputValue"/>
                         </Border>
-                        <Border Grid.Column="2"
-                                Classes="CalculatorMetricCard">
-                            <StackPanel Spacing="3">
-                                <TextBlock Text="После комиссии"
-                                           Classes="CalculatorMetricTitle"/>
-                                <TextBlock Text="{Binding NetSellTotalText}"
-                                           Classes="CalculatorMetricValue"/>
-                            </StackPanel>
+                        <Border Grid.Row="1" Grid.Column="0" Classes="CalculatorMetricCard CalculatorOutputCard">
+                            <TextBlock Text="{Binding BreakEvenSellPriceText}" Classes="CalculatorOutputValue"/>
                         </Border>
-                    </Grid>
+                        <Border Grid.Row="1" Grid.Column="1" Classes="CalculatorMetricCard CalculatorOutputCard">
+                            <TextBlock Text="{Binding OfferBuyTotalText}" Classes="CalculatorOutputValue"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="0" Classes="CalculatorMetricCard CalculatorOutputCard">
+                            <TextBlock Text="{Binding GrossSellTotalText}" Classes="CalculatorOutputValue"/>
+                        </Border>
+                        <Border Grid.Row="2" Grid.Column="1" Classes="CalculatorMetricCard CalculatorOutputCard">
+                            <TextBlock Text="{Binding NetSellTotalText}" Classes="CalculatorOutputValue"/>
+                        </Border>
 
-                    <Grid Grid.Row="2"
-                          ColumnDefinitions="*,200"
-                          ColumnSpacing="8">
-                        <Border Classes="CalculatorProfitBar">
-                            <TextBlock Text="{Binding ProfitTotalText}"
-                                       FontSize="16"
-                                       FontWeight="SemiBold"
-                                       Foreground="{Binding ProfitTotalBrush}"
-                                       TextTrimming="CharacterEllipsis"/>
-                        </Border>
-                        <Button Grid.Column="1"
+                        <Button Grid.Row="3"
+                                Grid.ColumnSpan="2"
+                                Width="220"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
                                 Classes="CalculatorActionButton"
                                 Content="В историю сделок"
                                 Command="{Binding AddTradeToHistoryCommand}"/>
                     </Grid>
-                    </Grid>
                 </Grid>
+            </Grid>
         </Border>
 
         <Grid Grid.Column="1"
               Grid.Row="1"
-              ColumnDefinitions="1.25*,0.95*"
+              ColumnDefinitions="1.35*,0.9*"
               ColumnSpacing="12">
             <Border Grid.Column="0"
                     ClipToBounds="True"
                     Classes="CalculatorPanel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Ориентиры"
-                               FontSize="15"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource BrushTextPrimary}"/>
-
-                    <Grid ColumnDefinitions="*,*"
+                <Grid RowDefinitions="Auto,Auto,*"
+                      RowSpacing="6">
+                    <Grid Grid.Row="0"
+                          ColumnDefinitions="*,*"
                           ColumnSpacing="6">
                         <Border Classes="CalculatorMetricCard">
                             <StackPanel Spacing="2">
@@ -229,33 +176,54 @@
                         </Border>
                     </Grid>
 
-                    <Border Classes="CalculatorMetricCard">
-                        <TextBlock Text="{Binding RecommendedPartyText}"
-                                   TextWrapping="Wrap"
-                                   Foreground="{DynamicResource BrushTextSecondary}"/>
-                    </Border>
+                    <Grid Grid.Row="1"
+                          ColumnDefinitions="*"
+                          ColumnSpacing="6">
+                        <WrapPanel Orientation="Horizontal">
+                            <Button Classes="CalculatorPresetButton" Content="x1" Command="{Binding SetQuantityPresetCommand}" CommandParameter="1"/>
+                            <Button Classes="CalculatorPresetButton" Content="x5" Command="{Binding SetQuantityPresetCommand}" CommandParameter="5"/>
+                            <Button Classes="CalculatorPresetButton" Content="x10" Command="{Binding SetQuantityPresetCommand}" CommandParameter="10"/>
+                            <Button Classes="CalculatorPresetButton" Content="x25" Command="{Binding SetQuantityPresetCommand}" CommandParameter="25"/>
+                            <Button Classes="CalculatorPresetButton" Content="x50" Command="{Binding SetQuantityPresetCommand}" CommandParameter="50"/>
+                        </WrapPanel>
+                    </Grid>
 
-                    <WrapPanel ItemHeight="26"
-                               ItemWidth="54"
-                               Orientation="Horizontal">
-                        <Button Classes="CalculatorPresetButton" Content="x1" Command="{Binding SetQuantityPresetCommand}" CommandParameter="1"/>
-                        <Button Classes="CalculatorPresetButton" Content="x5" Command="{Binding SetQuantityPresetCommand}" CommandParameter="5"/>
-                        <Button Classes="CalculatorPresetButton" Content="x10" Command="{Binding SetQuantityPresetCommand}" CommandParameter="10"/>
-                        <Button Classes="CalculatorPresetButton" Content="x25" Command="{Binding SetQuantityPresetCommand}" CommandParameter="25"/>
-                        <Button Classes="CalculatorPresetButton" Content="x50" Command="{Binding SetQuantityPresetCommand}" CommandParameter="50"/>
-                    </WrapPanel>
-                </StackPanel>
+                    <Grid Grid.Row="2"
+                          ColumnDefinitions="1.05*,1.3*"
+                          ColumnSpacing="8">
+                        <Border Classes="CalculatorMetricCard CalculatorMiniChartCard">
+                            <StackPanel Spacing="6">
+                                <Grid Height="92"
+                                      ColumnDefinitions="*,*,*,*,*,*,*,*,*"
+                                      VerticalAlignment="Bottom"
+                                      Margin="0,2,0,0">
+                                    <Border Grid.Column="0" Background="#7C5AC8" Height="24" VerticalAlignment="Bottom" CornerRadius="2" Margin="2,0"/>
+                                    <Border Grid.Column="1" Background="#7C5AC8" Height="18" VerticalAlignment="Bottom" CornerRadius="2" Margin="2,0"/>
+                                    <Border Grid.Column="2" Background="#7C5AC8" Height="32" VerticalAlignment="Bottom" CornerRadius="2" Margin="2,0"/>
+                                    <Border Grid.Column="3" Background="#7C5AC8" Height="44" VerticalAlignment="Bottom" CornerRadius="2" Margin="2,0"/>
+                                    <Border Grid.Column="4" Background="#7C5AC8" Height="38" VerticalAlignment="Bottom" CornerRadius="2" Margin="2,0"/>
+                                    <Border Grid.Column="5" Background="#7C5AC8" Height="56" VerticalAlignment="Bottom" CornerRadius="2" Margin="2,0"/>
+                                    <Border Grid.Column="6" Background="#7C5AC8" Height="30" VerticalAlignment="Bottom" CornerRadius="2" Margin="2,0"/>
+                                    <Border Grid.Column="7" Background="#7C5AC8" Height="20" VerticalAlignment="Bottom" CornerRadius="2" Margin="2,0"/>
+                                    <Border Grid.Column="8" Background="#7C5AC8" Height="48" VerticalAlignment="Bottom" CornerRadius="2" Margin="2,0"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1"
+                                Classes="CalculatorMetricCard CalculatorMiniChartCard">
+                            <TextBlock Text="{Binding MarketHintText}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource BrushTextSecondary}"/>
+                        </Border>
+                    </Grid>
+
+                </Grid>
             </Border>
 
             <Border Grid.Column="1"
                     ClipToBounds="True"
                     Classes="CalculatorPanel">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Проценты"
-                               FontSize="15"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource BrushTextPrimary}"/>
-
+                <StackPanel Spacing="3">
                     <Grid ColumnDefinitions="*,74"
                           ColumnSpacing="6">
                         <TextBox Classes="CalculatorInput" Watermark="База" Text="{Binding QuickBaseInput, Mode=TwoWay}"/>
@@ -278,6 +246,9 @@
                                FontWeight="SemiBold"
                                Foreground="{DynamicResource BrushTextPrimary}"/>
                     <Button Classes="CalculatorActionButton"
+                            HorizontalAlignment="Stretch"
+                            Height="32"
+                            Margin="0,2,0,0"
                             Content="Подставить ориентир"
                             Command="{Binding ApplyRecommendedSellPriceCommand}"/>
                 </StackPanel>
@@ -289,8 +260,10 @@
                 Classes="CalculatorOverlayBackdrop"
                 IsVisible="{Binding IsActiveLotsOverlayOpen}"
                 ZIndex="50">
-            <Border Width="980"
-                    MaxHeight="510"
+            <Border Width="{Binding ActiveLotsOverlayWidth}"
+                    MinWidth="690"
+                    MaxWidth="960"
+                    MaxHeight="500"
                     VerticalAlignment="Top"
                     HorizontalAlignment="Center"
                     Margin="0,20,0,0"
@@ -298,22 +271,26 @@
                 <Grid RowDefinitions="Auto,*">
                     <Grid Grid.Row="0"
                           ColumnDefinitions="*,Auto"
+                          ColumnSpacing="8"
                           Margin="0,0,0,10">
                         <StackPanel Spacing="2">
                             <TextBlock Text="{Binding ActiveLotsHeaderText}"
                                        Foreground="#F3EEFF"
                                        FontSize="18"
-                                       FontWeight="SemiBold"/>
+                                       FontWeight="SemiBold"
+                                       TextWrapping="Wrap"
+                                       MaxLines="2"
+                                       TextTrimming="CharacterEllipsis"/>
                             <TextBlock Text="Выберите лот: цена и количество подставятся в расчёт."
                                        Foreground="#A8A0C5"
                                        FontSize="12"/>
                         </StackPanel>
                         <Button Grid.Column="1"
                                 Classes="CalculatorOverlayCloseButton"
-                                Width="36"
-                                Height="36"
-                                FontSize="16"
-                                Content="×"
+                                Width="32"
+                                Height="32"
+                                FontSize="13"
+                                Content="✕"
                                 Command="{Binding CloseActiveLotsOverlayCommand}"/>
                     </Grid>
 
@@ -321,12 +298,15 @@
                                   Padding="0,0,6,0"
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
-                        <ItemsControl ItemsSource="{Binding ActiveLots}">
+                        <ItemsControl Classes="CalculatorLotsList"
+                                      HorizontalAlignment="Stretch"
+                                      ItemsSource="{Binding ActiveLots}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="models:AuctionLot">
                                     <Button Command="{ReflectionBinding DataContext.ApplyLotToCalculatorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             CommandParameter="{Binding .}"
                                             Classes="CalculatorLotButton"
+                                            HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Stretch"
                                             Margin="0,0,0,10"
                                             Padding="0"
@@ -337,12 +317,9 @@
                                                   RowDefinitions="Auto,Auto,Auto"
                                                   ColumnSpacing="10">
                                                 <Border Grid.RowSpan="3"
+                                                        Classes="CalculatorLotIconFrame"
                                                         Width="48"
                                                         Height="48"
-                                                        CornerRadius="14"
-                                                        Background="#241B3E"
-                                                        BorderBrush="#5A3D99"
-                                                        BorderThickness="1"
                                                         ClipToBounds="True">
                                                     <Grid>
                                                         <Image Source="{Binding IconPath, Converter={StaticResource IconPathToBitmapConverter}}"
@@ -370,15 +347,19 @@
                                                            Foreground="#F5F2FF"
                                                            FontSize="14"
                                                            FontWeight="SemiBold"
+                                                           MaxLines="2"
+                                                           TextWrapping="Wrap"
                                                            TextTrimming="CharacterEllipsis"/>
                                                 <TextBlock Grid.Column="2"
                                                            Text="{Binding CurrentPrice, StringFormat={}{0:N0} ₽}"
                                                            Foreground="#FFFFFF"
                                                            FontSize="15"
                                                            FontWeight="Bold"
+                                                           Width="{ReflectionBinding DataContext.ActiveLotsPriceColumnWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                            HorizontalAlignment="Right"/>
                                                 <TextBlock Grid.Row="1"
                                                            Grid.Column="1"
+                                                           TextWrapping="Wrap"
                                                            Text="{Binding PriceStatus}"
                                                            Foreground="#A98BFF"
                                                            FontSize="12"/>
@@ -387,6 +368,7 @@
                                                            Text="{Binding BuyoutPrice, StringFormat=Выкуп {0:N0} ₽}"
                                                            Foreground="#8C86A5"
                                                            FontSize="12"
+                                                           Width="{ReflectionBinding DataContext.ActiveLotsPriceColumnWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                            HorizontalAlignment="Right"/>
                                                 <TextBlock Grid.Row="2"
                                                            Grid.Column="1"
@@ -398,6 +380,7 @@
                                                            Text="{Binding Amount, StringFormat=Количество {0}}"
                                                            Foreground="#76708E"
                                                            FontSize="12"
+                                                           Width="{ReflectionBinding DataContext.ActiveLotsPriceColumnWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                            HorizontalAlignment="Right"/>
                                             </Grid>
                                         </Border>

@@ -53,9 +53,12 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private bool _isActiveLotsOverlayOpen;
     [ObservableProperty] private string _activeLotsHeaderText = "Активные лоты";
+    [ObservableProperty] private double _activeLotsOverlayWidth = 760;
+    [ObservableProperty] private double _activeLotsPriceColumnWidth = 140;
 
     [ObservableProperty] private string _quantityInput = "1";
     [ObservableProperty] private string _basePriceInput = string.Empty;
+    [ObservableProperty] private string _purchasePriceInput = string.Empty;
     [ObservableProperty] private string _actualSellPriceInput = string.Empty;
     [ObservableProperty] private double _selectedMarkupPercent = 15;
     [ObservableProperty] private string _selectedSaleChannel = "Продажа на аукционе";
@@ -100,6 +103,13 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
     partial void OnQuantityInputChanged(string value)
     {
+        var normalized = NormalizeQuantityInput(value);
+        if (!string.Equals(normalized, value, StringComparison.Ordinal))
+        {
+            QuantityInput = normalized;
+            return;
+        }
+
         UpdateItemRecommendations();
         RecalculateTradeOutcome();
     }
@@ -110,6 +120,18 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
         if (!string.Equals(normalized, value, StringComparison.Ordinal))
         {
             BasePriceInput = normalized;
+            return;
+        }
+
+        RecalculateTradeOutcome();
+    }
+
+    partial void OnPurchasePriceInputChanged(string value)
+    {
+        var normalized = NormalizeMoneyInput(value);
+        if (!string.Equals(normalized, value, StringComparison.Ordinal))
+        {
+            PurchasePriceInput = normalized;
             return;
         }
 
@@ -214,6 +236,7 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
         var quantity = Math.Max(1, lot.Amount);
         QuantityInput = quantity.ToString(CultureInfo.InvariantCulture);
         BasePriceInput = lot.CurrentPrice.ToString(CultureInfo.InvariantCulture);
+        PurchasePriceInput = lot.CurrentPrice.ToString(CultureInfo.InvariantCulture);
         IsActiveLotsOverlayOpen = false;
     }
 
@@ -409,6 +432,7 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
         UpdateActiveLots();
         ActiveLotsHeaderText = $"Активные лоты: {SelectedItem.DisplayName}";
+        UpdateActiveLotsLayoutMetrics();
         IsActiveLotsOverlayOpen = true;
     }
 
@@ -420,6 +444,27 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
         foreach (var lot in _auctionService.GetMockActiveLots(SelectedItem))
             ActiveLots.Add(lot);
+    }
+
+    private void UpdateActiveLotsLayoutMetrics()
+    {
+        var longestNameLength = SelectedItem?.DisplayName.Length ?? 0;
+        if (ActiveLots.Count > 0)
+            longestNameLength = Math.Max(longestNameLength, ActiveLots.Max(x => x.DisplayName?.Length ?? 0));
+
+        // Минимум считаем от 100 млн, чтобы колонка цены не "ломалась" на крупных суммах.
+        var maxPrice = 100_000_000L;
+        foreach (var lot in ActiveLots)
+            maxPrice = Math.Max(maxPrice, Math.Max(lot.CurrentPrice, Math.Max(lot.StartPrice, lot.BuyoutPrice)));
+
+        var ruCulture = CultureInfo.GetCultureInfo("ru-RU");
+        var maxPriceTextLength = maxPrice.ToString("N0", ruCulture).Length + 2; // + " ₽"
+        var computedPriceColumnWidth = 116d + Math.Max(0, maxPriceTextLength - 7) * 5.8d;
+
+        ActiveLotsPriceColumnWidth = Math.Clamp(computedPriceColumnWidth, 132d, 186d);
+
+        var computedOverlayWidth = 380d + longestNameLength * 6.4d + ActiveLotsPriceColumnWidth;
+        ActiveLotsOverlayWidth = Math.Clamp(computedOverlayWidth, 690d, 960d);
     }
 
     private void UpdateSelectedFlags()
@@ -490,20 +535,6 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
 
     private void RecalculateTradeOutcome()
     {
-        if (!TryParseMoney(BasePriceInput, out var basePartyPrice) || basePartyPrice <= 0)
-        {
-            OfferBuyUnitPriceText = "—";
-            OfferBuyTotalText = "—";
-            GrossSellTotalText = "—";
-            NetSellTotalText = "—";
-            ProfitPerUnitText = "—";
-            ProfitTotalText = "—";
-            ProfitTotalBrush = Brushes.LightGray;
-            BreakEvenSellPriceText = "—";
-            UpdateFeeText();
-            return;
-        }
-
         if (!TryParseQuantity(QuantityInput, out var quantity) || quantity <= 0)
         {
             OfferBuyUnitPriceText = "—";
@@ -518,13 +549,23 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
             return;
         }
 
-        if (!TryParseMoney(ActualSellPriceInput, out var actualSellPartyPrice) || actualSellPartyPrice <= 0)
+        var hasBasePrice = TryParseMoney(BasePriceInput, out var basePartyPrice) && basePartyPrice > 0;
+        if (hasBasePrice)
         {
             var baseMarkupRatio = SelectedMarkupPercent / 100.0;
             var offerBuyTotalOnly = basePartyPrice / (1 + baseMarkupRatio);
             var offerBuyUnitOnly = offerBuyTotalOnly / quantity;
             OfferBuyUnitPriceText = FormatMoney(offerBuyUnitOnly);
             OfferBuyTotalText = FormatMoney(offerBuyTotalOnly);
+        }
+        else
+        {
+            OfferBuyUnitPriceText = "—";
+            OfferBuyTotalText = "—";
+        }
+
+        if (!TryParseMoney(ActualSellPriceInput, out var actualSellPartyPrice) || actualSellPartyPrice <= 0)
+        {
             GrossSellTotalText = "—";
             NetSellTotalText = "—";
             ProfitPerUnitText = "—";
@@ -535,22 +576,31 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
             return;
         }
 
-        var markupRatio = SelectedMarkupPercent / 100.0;
-        var offerBuyTotal = basePartyPrice / (1 + markupRatio);
-        var offerBuyUnit = offerBuyTotal / quantity;
+        if (!TryParseMoney(PurchasePriceInput, out var purchasePartyPrice) || purchasePartyPrice <= 0)
+        {
+            GrossSellTotalText = FormatMoney(actualSellPartyPrice);
+            var feeOnly = SelectedSaleChannel == "Продажа в Discord" ? DiscordSaleFee : AuctionSaleFee;
+            NetSellTotalText = FormatMoney(actualSellPartyPrice * (1 - feeOnly));
+            ProfitPerUnitText = "—";
+            ProfitTotalText = "Введите цену покупки для расчёта прибыли";
+            ProfitTotalBrush = Brushes.LightGray;
+            BreakEvenSellPriceText = "—";
+            UpdateFeeText();
+            return;
+        }
+
+        var purchaseUnit = purchasePartyPrice / quantity;
         var fee = SelectedSaleChannel == "Продажа в Discord" ? DiscordSaleFee : AuctionSaleFee;
         var grossSellTotal = actualSellPartyPrice;
         var netSellTotal = grossSellTotal * (1 - fee);
         var netSellUnit = netSellTotal / quantity;
-        var profitPerUnit = netSellUnit - offerBuyUnit;
-        var totalProfit = netSellTotal - offerBuyTotal;
-        var breakEvenSellUnit = offerBuyUnit / (1 - fee);
+        var profitPerUnit = netSellUnit - purchaseUnit;
+        var totalProfit = netSellTotal - purchasePartyPrice;
+        var breakEvenSellUnit = purchaseUnit / (1 - fee);
 
-        OfferBuyUnitPriceText = FormatMoney(offerBuyUnit);
-        OfferBuyTotalText = FormatMoney(offerBuyTotal);
         GrossSellTotalText = FormatMoney(grossSellTotal);
         NetSellTotalText = FormatMoney(netSellTotal);
-        ProfitPerUnitText = $"{FormatSignedMoney(profitPerUnit)} ({(offerBuyUnit == 0 ? 0 : profitPerUnit / offerBuyUnit * 100):+0.##;-0.##;0}%)";
+        ProfitPerUnitText = $"{FormatSignedMoney(profitPerUnit)} ({(purchaseUnit == 0 ? 0 : profitPerUnit / purchaseUnit * 100):+0.##;-0.##;0}%)";
         ProfitTotalText = $"Итог по партии ({quantity} шт): {FormatSignedMoney(totalProfit)}";
         ProfitTotalBrush = totalProfit >= 0
             ? new SolidColorBrush(Color.Parse("#7FE9B0"))
@@ -697,7 +747,16 @@ public partial class AuctionCalculatorViewModel : Base.ViewModelBase
             return string.Empty;
 
         var digits = new string(value.Where(char.IsDigit).ToArray());
-        return digits.Length <= 11 ? digits : digits[..11];
+        return digits.Length <= 12 ? digits : digits[..12];
+    }
+
+    private static string NormalizeQuantityInput(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        var digits = new string(value.Where(char.IsDigit).ToArray());
+        return digits.Length <= 5 ? digits : digits[..5];
     }
 
     private static ObservableCollection<AuctionCategoryGroup> CloneCategories(IEnumerable<AuctionCategoryGroup> categories)
